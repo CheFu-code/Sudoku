@@ -44,7 +44,10 @@ export function NumberPad({ remaining, activeDigit, invalidFlash, reduceMotion, 
             key={d}
             disabled={done}
             onPress={() => onPress(d)}
-            style={styles.button}
+            style={[
+              styles.button,
+              active && { backgroundColor: c.surface, borderColor: c.primary },
+            ]}
             accessibilityRole="button"
             accessibilityState={{ selected: active, disabled: done }}
             accessibilityLabel={
@@ -109,8 +112,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 4,
   },
-  button: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, minHeight: 48 },
-  digit: { fontSize: 34, fontWeight: '400' },
+  button: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    minHeight: 58,
+    marginHorizontal: 2,
+    borderRadius: 10,
+    // Reserve the highlight border on every button so selecting one doesn't
+    // shift the row's layout — only its color turns visible when active.
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  digit: { fontSize: 40, fontWeight: '400' },
   faded: { opacity: 0.35 },
-  count: { fontSize: 12, marginTop: -2 },
+  count: { fontSize: 14, marginTop: -2 },
 });

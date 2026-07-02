@@ -96,6 +96,8 @@ export function GameScreen() {
         onHint={s.requestHint}
       />
 
+      <View style={styles.spacer} />
+
       <View style={styles.boardWrap}>
         {paused ? (
           <Pressable
@@ -215,7 +217,7 @@ export function GameScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  boardWrap: { paddingHorizontal: 8, marginTop: 12 },
+  boardWrap: { paddingHorizontal: 4, marginTop: 12 },
   pausedBox: {
     width: '100%',
     aspectRatio: 1,
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bottom: { paddingHorizontal: 8, paddingTop: 16 },
+  bottom: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 10 },
   result: {
     borderRadius: 16,
     borderWidth: 1,

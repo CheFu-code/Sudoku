@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolateColor,
@@ -112,6 +112,25 @@ function CellComponent({
   // first-frame fallback before the board has been measured.
   const sizeStyle = cellSize > 0 ? { width: cellSize, height: cellSize } : styles.cellFlex;
 
+  // Digit / note glyphs scale with the measured cell so they fill it legibly on
+  // any screen width. Before the first layout (cellSize 0) we keep the static
+  // fallbacks in the StyleSheet. Only recomputes when cellSize changes.
+  const fontSizes = useMemo(
+    () =>
+      cellSize > 0
+        ? {
+            value: Math.round(cellSize * 0.72),
+            cross: Math.round(cellSize * 0.5),
+            // Notes share a 3×3 grid, so each slot is only ~cellSize/3. Keep the
+            // note ~+15% over the old fixed 9px, and the boxed (highlighted) note
+            // a hair smaller so it sits inside its badge without clipping.
+            note: Math.round(cellSize * 0.26),
+            noteBadge: Math.round(cellSize * 0.24),
+          }
+        : null,
+    [cellSize],
+  );
+
   return (
     <Pressable
       onPress={() => onPress(index)}
@@ -128,15 +147,23 @@ function CellComponent({
         />
       )}
       {annotation?.cross && cell.value === null ? (
-        <Text style={[styles.cross, { color: c.textMuted }]} accessibilityLabel="cannot place here">
+        <Text
+          style={[styles.cross, fontSizes && { fontSize: fontSizes.cross }, { color: c.textMuted }]}
+          accessibilityLabel="cannot place here"
+        >
           ×
         </Text>
       ) : annotation?.ghost && cell.value === null ? (
-        <Text style={[styles.value, styles.ghost, { color: c.primary }]} accessibilityLabel={`answer ${annotation.ghost}`}>
+        <Text
+          style={[styles.value, styles.ghost, fontSizes && { fontSize: fontSizes.value }, { color: c.primary }]}
+          accessibilityLabel={`answer ${annotation.ghost}`}
+        >
           {annotation.ghost}
         </Text>
       ) : cell.value !== null ? (
-        <Animated.Text style={[styles.value, valueAnim]}>{cell.value}</Animated.Text>
+        <Animated.Text style={[styles.value, fontSizes && { fontSize: fontSizes.value }, valueAnim]}>
+          {cell.value}
+        </Animated.Text>
       ) : cell.notes.size > 0 ? (
         <View style={styles.notes}>
           {DIGITS.map((d) => {
@@ -153,12 +180,15 @@ function CellComponent({
               <View key={d} style={styles.noteSlot}>
                 {badge ? (
                   <View style={[styles.noteBadge, { backgroundColor: c.primary }]}>
-                    <Text style={styles.noteBadgeText}>{d}</Text>
+                    <Text style={[styles.noteBadgeText, fontSizes && { fontSize: fontSizes.noteBadge }]}>
+                      {d}
+                    </Text>
                   </View>
                 ) : (
                   <Text
                     style={[
                       styles.note,
+                      fontSizes && { fontSize: fontSizes.note },
                       activeNote && styles.noteActive,
                       struck && styles.noteStruck,
                       {
@@ -236,13 +266,13 @@ const styles = StyleSheet.create({
   noteActive: { fontWeight: '800' },
   noteStruck: { fontWeight: '800', textDecorationLine: 'line-through' },
   noteBadge: {
-    width: '88%',
+    width: '96%',
     aspectRatio: 1,
-    borderRadius: 3,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  noteBadgeText: { fontSize: 9, fontWeight: '800', color: '#FFFFFF' },
+  noteBadgeText: { fontSize: 9, fontWeight: '800', color: '#FFFFFF', includeFontPadding: false },
 });
 
 export const Cell = React.memo(CellComponent);

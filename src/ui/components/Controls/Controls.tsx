@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   tool: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 56, minHeight: 56 },
-  icon: { fontSize: 24 },
+  icon: { fontSize: 26 },
   label: { fontSize: 13 },
   badge: {
     position: 'absolute',
