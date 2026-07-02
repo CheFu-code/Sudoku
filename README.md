@@ -36,6 +36,22 @@ npm run ios       # or: npm run android  (runs expo prebuild + native build)
 npm test
 ```
 
+## Releasing
+
+Pushing a `v*` tag triggers CI (`.github/workflows/release.yml`): it typechecks
+and tests, then runs `eas build` + `eas submit` for iOS. App Store Connect is set
+to auto-publish once the build clears review.
+
+```bash
+make release VERSION=1.2.0        # tags v1.2.0 and pushes it
+```
+
+The tag drives the marketing version (written to `app.json` in CI, not committed
+back); EAS auto-increments the build number. Requires the **`EXPO_TOKEN`** repo
+secret. The Android job is written but disabled — enable it by adding the
+`PLAY_SERVICE_ACCOUNT_JSON` secret and setting the `ANDROID_RELEASE_ENABLED` repo
+variable to `true` once Play Console registration is done.
+
 ## Puzzles
 
 A starter bank is committed under `assets/puzzles/`. Regenerate or rebuild it:

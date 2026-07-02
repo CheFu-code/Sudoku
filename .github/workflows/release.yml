@@ -1,0 +1,101 @@
+name: Release
+
+# Push a version tag to cut a release, e.g.:
+#   git tag v1.2.0 && git push origin v1.2.0
+# The tag drives the app's marketing version; EAS auto-increments the build number.
+# App Store Connect is set to auto-publish once the build finishes review.
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Don't let two tags race a build/submit for the same platform.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ios:
+    name: iOS — build & submit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Sync version from tag
+        run: npm run set-version "$GITHUB_REF_NAME"
+
+      - name: Build (iOS, production)
+        run: eas build --platform ios --profile production --non-interactive --wait
+
+      - name: Submit to App Store Connect
+        run: eas submit --platform ios --profile production --non-interactive --latest
+
+  android:
+    name: Android — build & submit
+    runs-on: ubuntu-latest
+    # DISABLED until Play Console registration is done. To enable:
+    #   1. finish Play Console setup + closed-testing requirements
+    #   2. add the PLAY_SERVICE_ACCOUNT_JSON secret
+    #   3. set the repo variable ANDROID_RELEASE_ENABLED to "true"
+    if: ${{ vars.ANDROID_RELEASE_ENABLED == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Sync version from tag
+        run: npm run set-version "$GITHUB_REF_NAME"
+
+      # eas.json references ./play-service-account.json (git-ignored); recreate it here.
+      - name: Write Play service account key
+        run: printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > play-service-account.json
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+      - name: Build (Android, production)
+        run: eas build --platform android --profile production --non-interactive --wait
+
+      - name: Submit to Google Play
+        run: eas submit --platform android --profile production --non-interactive --latest

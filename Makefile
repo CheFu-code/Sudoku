@@ -9,12 +9,12 @@ EAS  ?= npx eas-cli
 .PHONY: help install start web ios ios-device ios-release ios-start android android-start \
         prebuild prebuild-clean \
         test test-watch typecheck \
-        build-dev build-preview build-prod submit \
+        build-dev build-preview build-prod submit release \
         clean
 
 ## help: Show this help.
 help:
-	@echo "habit-tracker-oji — common commands"
+	@echo "sudoku-oji — common commands"
 	@echo ""
 	@grep -E '^## ' $(MAKEFILE_LIST) | sed 's/## /  make /'
 
@@ -97,6 +97,12 @@ build-prod:
 ## submit: Submit the latest production build to the app stores.
 submit:
 	$(EAS) submit --profile production
+
+## release: Tag VERSION and push it to trigger the CI release pipeline. Usage: make release VERSION=1.2.0
+release:
+	@test -n "$(VERSION)" || { echo "Usage: make release VERSION=1.2.0"; exit 1; }
+	git tag v$(VERSION)
+	git push origin v$(VERSION)
 
 # --- Housekeeping -----------------------------------------------------------
 

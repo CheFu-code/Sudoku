@@ -45,8 +45,7 @@ example
 # EAS Submit — Google Play service account key (secret)
 play-service-account.json
 
-# Personal / internal — contains Apple ID, team ID, internal publishing notes
-eas.json
+# Personal / internal notes
 REGISTRATION_TODO.md
 
 icon.svg

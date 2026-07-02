@@ -51,7 +51,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "build:puzzles": "tsx scripts/build-puzzle-bank.ts"
+    "build:puzzles": "tsx scripts/build-puzzle-bank.ts",
+    "set-version": "tsx scripts/set-version.ts"
   },
   "jest": {
     "preset": "jest-expo",
