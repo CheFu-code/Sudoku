@@ -14,6 +14,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { Board } from '../components/Board/Board';
 import { Controls } from '../components/Controls/Controls';
 import { GameHeader } from '../components/Header/GameHeader';
+import { GameStats } from '../components/Header/GameStats';
 import { HintSheet } from '../components/Hint/HintSheet';
 import { NumberPad } from '../components/NumberPad/NumberPad';
 
@@ -83,22 +84,19 @@ export function GameScreen() {
         { backgroundColor: c.background, paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <GameHeader
-        difficulty={s.difficulty}
-        mistakes={s.mistakes}
-        maxMistakes={maxMistakes}
-        elapsed={s.elapsed}
-        paused={paused}
-        hintsUsed={s.hintsUsed}
-        hintAvailable={hintAvailable && !s.hint}
-        onBack={() => router.replace('/')}
-        onTogglePause={() => s.setPaused(!paused)}
-        onHint={s.requestHint}
-      />
+      <GameHeader onBack={() => router.replace('/')} />
 
       <View style={styles.spacer} />
 
       <View style={styles.boardWrap}>
+        <GameStats
+          difficulty={s.difficulty}
+          mistakes={s.mistakes}
+          maxMistakes={maxMistakes}
+          elapsed={s.elapsed}
+          paused={paused}
+          onTogglePause={() => s.setPaused(!paused)}
+        />
         {paused ? (
           <Pressable
             onPress={() => s.setPaused(false)}
@@ -172,11 +170,14 @@ export function GameScreen() {
               pencilMode={s.pencilMode}
               fastMode={s.fastMode}
               canUndo={historyCanUndo(s.history)}
+              hintAvailable={hintAvailable && !s.hint}
+              hintsUsed={s.hintsUsed}
               onUndo={s.undo}
               onErase={s.erase}
               onFastPencil={s.fastPencil}
               onTogglePencil={s.togglePencil}
               onToggleFastMode={s.toggleFastMode}
+              onHint={s.requestHint}
             />
             <NumberPad
               remaining={remaining}
