@@ -49,3 +49,8 @@ play-service-account.json
 REGISTRATION_TODO.md
 
 icon.svg
+
+# Offline puzzle dataset — large (511MB), read at build time only, not shipped
+sudoku-3m.csv
+*.csv
+scripts/bin/

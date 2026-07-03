@@ -107,10 +107,32 @@ scripts/
   no app instrumentation changes needed.
 
 ## Puzzles
-- Source: Kaggle "3 million Sudoku puzzles with ratings" (license approved).
-- `scripts/build-puzzle-bank.ts` runs **offline at dev time** (not in-app):
-  buckets puzzles into the 5 difficulty tiers by rating, samples N per tier,
-  emits `assets/puzzles/<difficulty>.json`.
+- Difficulty is graded by **how hard the puzzle is to solve**, not clue count
+  (clue count barely correlates with difficulty). 6 tiers:
+  `easy | medium | hard | expert | extreme | diabolical`. 500 per tier.
+- `scripts/build-puzzle-bank.ts` runs **offline at dev time** (not in-app) and
+  grades candidates from three sources — curated hard grids
+  (`assets/puzzles/_sources/hardest.txt`), the Kaggle 3M CSV (`PUZZLE_CSV=...`,
+  gitignored, ratings ignored/re-graded), and a generate-and-grade backstop —
+  dedupes, buckets by tier, and emits `assets/puzzles/<difficulty>.json`
+  ({ id `<tier>-<hash>`, difficulty, givens, solution, rating, hardestTechnique }).
+  Two graders, auto-selected:
+  - **skfr (preferred)** — the compiled SE rater at `scripts/bin/skfr` (or `$SKFR`).
+    Rates candidates in fast batches (~700/s) and buckets by **SE band** (`SE_BANDS`);
+    `rating` is the authoritative SE ER. This is the only tractable way to mine the
+    hard tiers (diabolical ≈ 0.6% of the Kaggle set → ~85k rows scanned for 500).
+  - **Fallback (no skfr)** — `src/domain/grade.ts` `gradePuzzle` drives the in-app
+    technique ladder (`hints/findHint.ts` `DETECTORS`) and buckets by hardest
+    technique; `rating` is approximate. Then run `scripts/apply-se-ratings.ts` to
+    overwrite with real SE scores.
+  - `hardestTechnique` is always populated via `gradePuzzle` on the final set.
+- **Build the workflow:** `PER_TIER=500 PUZZLE_CSV=./sudoku-3m.csv npx tsx scripts/build-puzzle-bank.ts`.
+- **skfr binary** (gitignored, machine-specific). On Apple Silicon build for
+  x86_64 + run under Rosetta:
+  `git clone https://github.com/dobrichev/skfr && cd skfr/src && clang++ -arch x86_64 -O3 -std=c++17 -w -msse4.2 -Wno-c++11-narrowing utilities.cpp opsudo.cpp puzzle.cpp fsss.cpp t_128.cpp flog.cpp skfr.cpp ratingengine.cpp bitfields.cpp -o skfr`, then copy to `scripts/bin/skfr`.
+- `scripts/serate-check.ts` spot-checks a sample (our tier vs SE) for calibration.
+- Verified SE per tier (median): easy 1.5, medium 2.6, hard 4.2, expert 6.6,
+  extreme 7.2, diabolical 8.3+ (up to ~12).
 - `BundledPuzzleRepository` serves a random unused puzzle per difficulty,
   tracking played ids to avoid repeats.
 - **Future:** replace with an on-device generator implementing the same

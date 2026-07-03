@@ -4,7 +4,15 @@
  * The board is a flat 81-cell array indexed by `row * 9 + col`.
  */
 
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert' | 'extreme';
+import type { TechniqueId } from './hints/types';
+
+export type Difficulty =
+  | 'easy'
+  | 'medium'
+  | 'hard'
+  | 'expert'
+  | 'extreme'
+  | 'diabolical';
 
 export const DIFFICULTIES: Difficulty[] = [
   'easy',
@@ -12,6 +20,7 @@ export const DIFFICULTIES: Difficulty[] = [
   'hard',
   'expert',
   'extreme',
+  'diabolical',
 ];
 
 /** A digit that can be placed in a cell (1-9). */
@@ -42,6 +51,14 @@ export interface Puzzle {
   givens: string;
   /** 81-char string of the unique solution. */
   solution: string;
+  /**
+   * Difficulty rating from the offline grader (SE-aligned; see
+   * `src/domain/grade.ts`). Optional so pre-grading banks still load. Not shown
+   * in the UI — used for grading/analysis.
+   */
+  rating?: number;
+  /** The hardest solving technique the grader needed. Optional (see `rating`). */
+  hardestTechnique?: TechniqueId;
 }
 
 /**

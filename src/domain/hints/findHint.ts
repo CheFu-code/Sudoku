@@ -35,11 +35,13 @@ import { detectAic } from './aic';
 import { solveBoard, bruteForceHint } from './bruteForce';
 import type { Hint, HintAction } from './types';
 
-type Detector = (board: Board, candidates: Map<CellIndex, Set<Digit>>) => Hint | null;
+export type Detector = (board: Board, candidates: Map<CellIndex, Set<Digit>>) => Hint | null;
 
 // Easiest → hardest. The first detector whose move actually changes the board
-// wins, so the player always learns the simplest available technique.
-const DETECTORS: Detector[] = [
+// wins, so the player always learns the simplest available technique. Exported
+// so the offline difficulty grader (`src/domain/grade.ts`) drives the exact same
+// ladder — one source of truth for "which techniques, in what order".
+export const DETECTORS: Detector[] = [
   detectNakedSingle,
   detectHiddenSingle,
   (b, c) => detectNakedSubset(b, c, 2), // naked pair
@@ -69,6 +71,29 @@ const DETECTORS: Detector[] = [
   detectAlsXz,
 ];
 
+/**
+ * Return the easiest detector hint that actually changes `board`, or null if
+ * none of the supported techniques apply. When `solution` is provided, unsound
+ * hints (a placement that contradicts the solution, or an elimination that drops
+ * a solution digit) are skipped — a guard against any detector bug.
+ *
+ * Shared by `findHint` (app) and the offline grader, which supplies its own
+ * `candidates` map so eliminations accumulate across steps.
+ */
+export function firstApplicableHint(
+  board: Board,
+  candidates: Map<CellIndex, Set<Digit>>,
+  solution: Digit[] | null,
+): Hint | null {
+  for (const detect of DETECTORS) {
+    const hint = detect(board, candidates);
+    if (!hint || !actionChangesBoard(board, hint.action)) continue;
+    if (solution && !isHintSound(hint, solution)) continue;
+    return hint;
+  }
+  return null;
+}
+
 export function findHint(board: Board): Hint | null {
   const candidates = allCandidates(board);
   // The unique solution doubles as a soundness check: a placement must match it
@@ -76,12 +101,8 @@ export function findHint(board: Board): Hint | null {
   // any detector bug — an unsound hint is skipped rather than shown.
   const solution = solveBoard(board);
 
-  for (const detect of DETECTORS) {
-    const hint = detect(board, candidates);
-    if (!hint || !actionChangesBoard(board, hint.action)) continue;
-    if (solution && !isHintSound(hint, solution)) continue;
-    return hint;
-  }
+  const hint = firstApplicableHint(board, candidates, solution);
+  if (hint) return hint;
 
   // Nothing learnable applies — fall back to a guaranteed (validated) placement.
   if (solution) return bruteForceHint(board, solution);

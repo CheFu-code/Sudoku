@@ -19,18 +19,31 @@ export function countSolutionsSlow(givens: string, limit = 2): number {
   };
   const solve = (g: number[]): void => {
     if (count >= limit) return;
-    const i = g.indexOf(0);
-    if (i === -1) {
-      count++;
+    // Expand the most-constrained empty cell (MRV). Plain first-empty expansion
+    // is pathologically slow on grids built to defeat naive backtracking (e.g.
+    // the diabolical tier), so pick the cell with the fewest candidates.
+    let best = -1;
+    let bestCands: number[] = [];
+    for (let i = 0; i < 81; i++) {
+      if (g[i] !== 0) continue;
+      const cands: number[] = [];
+      for (let v = 1; v <= 9; v++) if (canPlace(g, i, v)) cands.push(v);
+      if (cands.length === 0) return; // dead end — no solution down this branch
+      if (best === -1 || cands.length < bestCands.length) {
+        best = i;
+        bestCands = cands;
+        if (cands.length === 1) break;
+      }
+    }
+    if (best === -1) {
+      count++; // no empty cells left → a complete solution
       return;
     }
-    for (let v = 1; v <= 9; v++) {
-      if (canPlace(g, i, v)) {
-        g[i] = v;
-        solve(g);
-        g[i] = 0;
-        if (count >= limit) return;
-      }
+    for (const v of bestCands) {
+      g[best] = v;
+      solve(g);
+      g[best] = 0;
+      if (count >= limit) return;
     }
   };
   solve(grid);

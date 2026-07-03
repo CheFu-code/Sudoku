@@ -30,6 +30,7 @@ const LABELS: Record<Difficulty, string> = {
   hard: 'Hard',
   expert: 'Expert',
   extreme: 'Extreme',
+  diabolical: 'Diabolical',
 };
 
 export function GameHeader({

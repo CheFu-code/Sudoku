@@ -1,0 +1,30 @@
+# Curated hard Sudoku grids (81 chars, '0' or '.' = blank), one per line.
+#
+# These are famous, widely-republished ultra-hard puzzles (SE ~9-12). The build
+# script (scripts/build-puzzle-bank.ts) GRADES each one with src/domain/grade.ts
+# and files it under its graded tier — most land in `extreme`/`diabolical`. Any
+# line that doesn't parse or has no solution is silently skipped, so it is safe
+# to paste more grids from the enjoysudoku "hardest sudokus" threads here.
+#
+# Optionally append ",<81-char-solution>" after a puzzle to skip re-solving it.
+
+# Arto Inkala 2012 — "world's hardest" (SE ~11.9)
+800000000003600000070090200050007000000045700000100030001000068008500010090000400
+
+# AI Escargot — Arto Inkala 2006 (SE ~9-11)
+100007090030020008009600500005300900010080002600004000300000010040000007007000300
+
+# Golden Nugget (SE ~11.9)
+000000039000001005003050800008090006070002000100400000009080050020000600400700000
+
+# Kolk / "tarek" hard (SE ~11.7)
+000000010400000000020000000000050407008000300001090000300400200050100000000806000
+
+# Easter Monster (SE ~11.1)
+100000002090400050006000700050903000000070000000850040700000600030009080002000001
+
+# "Fata Morgana" (SE ~11.x)
+000000012000035000000600070700000300000400800100000000000120000080000040050000600
+
+# "Sudoku of the century" (SE ~11.x)
+000000000000003085001020000000507000004000100090000000500000073002010000000040009
