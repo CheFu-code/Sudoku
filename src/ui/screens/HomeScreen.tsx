@@ -8,6 +8,7 @@ import type { Difficulty } from '../../domain/types';
 import { useGameStore } from '../../state/gameStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { useReduceMotion } from '../hooks/useReduceMotion';
+import { SudokuMark } from '../components/Logo/SudokuMark';
 
 const LABELS: Record<Difficulty, string> = {
   easy: 'Easy',
@@ -15,6 +16,7 @@ const LABELS: Record<Difficulty, string> = {
   hard: 'Hard',
   expert: 'Expert',
   extreme: 'Extreme',
+  diabolical: 'Diabolical',
 };
 
 function formatTime(total: number): string {
@@ -67,6 +69,10 @@ export function HomeScreen() {
           <Text style={[styles.gearIcon, { color: c.textMuted }]}>⚙</Text>
         </Pressable>
       </View>
+
+      <Animated.View entering={entering()} style={styles.logo}>
+        <SudokuMark size={88} />
+      </Animated.View>
 
       <Animated.Text entering={entering()} style={[styles.title, { color: c.text }]}>
         Sudoku
@@ -122,11 +128,12 @@ const styles = StyleSheet.create({
     marginRight: -10,
   },
   gearIcon: { fontSize: 22 },
+  logo: { alignItems: 'center', marginTop: 24 },
   title: {
     fontSize: 40,
     fontWeight: '800',
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: 12,
     marginBottom: 24,
   },
   resume: {

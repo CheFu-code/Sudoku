@@ -2,19 +2,23 @@
 
 .DEFAULT_GOAL := help
 
+# App name is derived from the directory, so this file is identical across repos.
+APP_NAME := $(notdir $(CURDIR))
+
 # Use npx so the locally pinned Expo/EAS CLIs are used.
 EXPO ?= npx expo
 EAS  ?= npx eas-cli
 
 .PHONY: help install start web ios ios-device ios-release ios-start android android-start \
         prebuild prebuild-clean \
-        test test-watch typecheck \
+        test test-watch typecheck lint check \
         build-dev build-preview build-prod submit release \
+        build-icons build-puzzles \
         clean
 
 ## help: Show this help.
 help:
-	@echo "sudoku-oji — common commands"
+	@echo "$(APP_NAME) — common commands"
 	@echo ""
 	@grep -E '^## ' $(MAKEFILE_LIST) | sed 's/## /  make /'
 
@@ -80,6 +84,13 @@ test-watch:
 typecheck:
 	npx tsc --noEmit
 
+## lint: Lint the project with Expo's ESLint config.
+lint:
+	$(EXPO) lint
+
+## check: Run typecheck, lint, and tests (full quality gate).
+check: typecheck lint test
+
 # --- EAS cloud builds & submission ------------------------------------------
 
 ## build-dev: EAS development build (dev client, internal distribution).
@@ -103,6 +114,16 @@ release:
 	@test -n "$(VERSION)" || { echo "Usage: make release VERSION=1.2.0"; exit 1; }
 	git tag v$(VERSION)
 	git push origin v$(VERSION)
+
+# --- Assets (offline, dev-time) ---------------------------------------------
+
+## build-icons: Rasterize assets/svgs/ into the app icon / favicon / splash PNGs.
+build-icons:
+	npm run build:icons
+
+## build-puzzles: Grade candidate puzzles and emit the bundled banks.
+build-puzzles:
+	npm run build:puzzles
 
 # --- Housekeeping -----------------------------------------------------------
 

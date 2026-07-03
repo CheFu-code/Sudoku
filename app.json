@@ -17,7 +17,7 @@
     "android": {
       "package": "dev.alejandrodelacruz.sudoku",
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#ECF7FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
