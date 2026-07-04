@@ -9,6 +9,7 @@ import { useGameStore } from '../../state/gameStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { SudokuMark } from '../components/Logo/SudokuMark';
+import { Icon } from '../components/Icon';
 
 const LABELS: Record<Difficulty, string> = {
   easy: 'Easy',
@@ -66,7 +67,7 @@ export function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel="Settings"
         >
-          <Text style={[styles.gearIcon, { color: c.textMuted }]}>⚙</Text>
+          <Icon name="settings" size={22} color={c.textMuted} />
         </Pressable>
       </View>
 
@@ -108,7 +109,7 @@ export function HomeScreen() {
               accessibilityLabel={`New ${LABELS[d]} game`}
             >
               <Text style={[styles.diffText, { color: c.text }]}>{LABELS[d]}</Text>
-              <Text style={[styles.chevron, { color: c.textMuted }]}>›</Text>
+              <Icon name="chevronRight" size={22} color={c.textMuted} />
             </Pressable>
           </Animated.View>
         ))}
@@ -127,7 +128,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: -10,
   },
-  gearIcon: { fontSize: 22 },
   logo: { alignItems: 'center', marginTop: 24 },
   title: {
     fontSize: 40,
@@ -158,5 +158,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   diffText: { fontSize: 18, fontWeight: '600' },
-  chevron: { fontSize: 22 },
 });

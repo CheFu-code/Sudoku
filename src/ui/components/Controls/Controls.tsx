@@ -1,10 +1,14 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
+import { Icon, type IconName } from '../Icon';
 
 interface ToolProps {
   label: string;
-  icon: string;
+  /** Lucide icon (preferred). */
+  iconName?: IconName;
+  /** Fallback text glyph for tools without a clean Lucide equivalent (e.g. auto-notes). */
+  icon?: string;
   active?: boolean;
   disabled?: boolean;
   /** ON/OFF switch badge — presence also gives the button `switch` semantics. */
@@ -16,7 +20,7 @@ interface ToolProps {
   onPress: () => void;
 }
 
-function Tool({ label, icon, active, disabled, badge, countBadge, hint, onPress }: ToolProps) {
+function Tool({ label, iconName, icon, active, disabled, badge, countBadge, hint, onPress }: ToolProps) {
   const theme = useTheme();
   const c = theme.colors;
   const color = active ? c.primary : disabled ? c.textMuted : c.text;
@@ -31,9 +35,13 @@ function Tool({ label, icon, active, disabled, badge, countBadge, hint, onPress 
       accessibilityState={{ disabled: !!disabled, checked: badge !== undefined ? !!active : undefined }}
     >
       <View>
-        <Text style={[styles.icon, { color }]} accessibilityElementsHidden importantForAccessibility="no">
-          {icon}
-        </Text>
+        {iconName ? (
+          <Icon name={iconName} size={26} color={color} />
+        ) : (
+          <Text style={[styles.icon, { color }]} accessibilityElementsHidden importantForAccessibility="no">
+            {icon}
+          </Text>
+        )}
         {badge !== undefined && (
           <View style={[styles.badge, { backgroundColor: active ? c.primary : c.textMuted }]}>
             <Text style={styles.badgeText}>{badge}</Text>
@@ -81,17 +89,17 @@ export function Controls({
 }: Props) {
   return (
     <View style={styles.row}>
-      <Tool label="Undo" icon="↶" disabled={!canUndo} hint="Undo the last move" onPress={onUndo} />
-      <Tool label="Erase" icon="⌫" hint="Clear the selected cell" onPress={onErase} />
+      <Tool label="Undo" iconName="undo" disabled={!canUndo} hint="Undo the last move" onPress={onUndo} />
+      <Tool label="Erase" iconName="erase" hint="Clear the selected cell" onPress={onErase} />
       <Tool
         label="Auto-notes"
-        icon="✏︎⚡"
+        iconName="autoNotes"
         hint="Fill every empty cell with its possible notes"
         onPress={onFastPencil}
       />
       <Tool
         label="Notes"
-        icon="✏︎"
+        iconName="pencil"
         active={pencilMode}
         badge={pencilMode ? 'ON' : 'OFF'}
         hint="Toggle pencil notes for digit entry"
@@ -99,7 +107,7 @@ export function Controls({
       />
       <Tool
         label="Fast"
-        icon="⚡"
+        iconName="zap"
         active={fastMode}
         badge={fastMode ? 'ON' : 'OFF'}
         hint="Toggle number-first input: pick a digit, then tap cells"
@@ -107,7 +115,7 @@ export function Controls({
       />
       <Tool
         label="Hint"
-        icon="💡"
+        iconName="lightbulb"
         disabled={!hintAvailable}
         countBadge={hintsUsed > 0 ? String(hintsUsed) : undefined}
         hint="Explain the next move step by step"

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeProvider';
 import { GameSettings } from '../components/Settings/GameSettings';
 import { ThemePicker } from '../components/ThemePicker/ThemePicker';
+import { Icon } from '../components/Icon';
 
 export function SettingsScreen() {
   const router = useRouter();
@@ -25,8 +26,9 @@ export function SettingsScreen() {
           hitSlop={16}
           accessibilityRole="button"
           accessibilityLabel="Back"
+          style={styles.back}
         >
-          <Text style={[styles.back, { color: c.text }]}>←</Text>
+          <Icon name="chevronLeft" size={28} color={c.text} />
         </Pressable>
         <Text style={[styles.title, { color: c.text }]}>Settings</Text>
         {/* Spacer balances the back glyph so the title stays optically centered. */}
@@ -42,7 +44,7 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, gap: 24 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  back: { fontSize: 26, width: 32 },
+  back: { width: 32 },
   backSpacer: { width: 32 },
   title: { flex: 1, fontSize: 18, fontWeight: '600', textAlign: 'center' },
 });

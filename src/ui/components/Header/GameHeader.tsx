@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeProvider';
+import { Icon } from '../Icon';
 
 interface Props {
   onBack: () => void;
@@ -18,7 +19,7 @@ export function GameHeader({ onBack }: Props) {
           accessibilityRole="button"
           accessibilityLabel="Back to menu"
         >
-          <Text style={[styles.back, { color: c.text }]}>←</Text>
+          <Icon name="chevronLeft" size={28} color={c.text} />
         </Pressable>
       </View>
     </View>
@@ -28,5 +29,4 @@ export function GameHeader({ onBack }: Props) {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 16, paddingTop: 8 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  back: { fontSize: 26 },
 });

@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Difficulty } from '../../../domain/types';
 import { useTheme } from '../../theme/ThemeProvider';
+import { Icon } from '../Icon';
 
 interface Props {
   difficulty: Difficulty;
@@ -60,8 +61,15 @@ export function GameStats({
           accessibilityElementsHidden
           importantForAccessibility="no"
         >
-          {formatTime(elapsed)} {paused ? '▶' : '❚❚'}
+          {formatTime(elapsed)}
         </Text>
+        <Icon
+          name={paused ? 'play' : 'pause'}
+          size={15}
+          color={c.textMuted}
+          fill={c.textMuted}
+          style={styles.timerIcon}
+        />
       </Pressable>
     </View>
   );
@@ -77,4 +85,5 @@ const styles = StyleSheet.create({
   },
   stat: { fontSize: 15 },
   timer: { flexDirection: 'row', alignItems: 'center' },
+  timerIcon: { marginLeft: 6 },
 });

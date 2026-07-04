@@ -1,5 +1,11 @@
 # Sudoku App — Repository Guide
 
+> Cross-app conventions shared across the sibling apps (incl. the Lucide **icon
+> convention** — use the `Icon` wrapper, never an icon font) live in the parent
+> `apps/CLAUDE.md`, imported below for use in the `apps/` workspace.
+
+@../../CLAUDE.md
+
 Cross-platform (iOS + Android) Sudoku game built with **React Native + Expo
 (TypeScript)**. Offline-first, with a clean separation that lets a backend
 (analytics, accounts, cloud sync) be plugged in later without rewriting the app.
