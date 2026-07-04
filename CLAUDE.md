@@ -4,7 +4,7 @@
 > convention** — use the `Icon` wrapper, never an icon font) live in the parent
 > `apps/CLAUDE.md`, imported below for use in the `apps/` workspace.
 
-@../../CLAUDE.md
+@../CLAUDE.md
 
 Cross-platform (iOS + Android) Sudoku game built with **React Native + Expo
 (TypeScript)**. Offline-first, with a clean separation that lets a backend
