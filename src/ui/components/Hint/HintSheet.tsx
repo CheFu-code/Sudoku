@@ -34,7 +34,7 @@ export function HintSheet({ hint, step, reduceMotion, onNext, onPrev, onApply, o
       : current.stage === 'where'
         ? { label: 'Explain how', a11y: 'Explain the technique', onPress: onNext }
         : isLast
-          ? { label: 'Apply', a11y: 'Apply this move', onPress: onApply }
+          ? { label: hint.applyLabel, a11y: 'Apply this move', onPress: onApply }
           : { label: 'Next', a11y: 'Next step', onPress: onNext };
 
   return (

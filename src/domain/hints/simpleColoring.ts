@@ -70,9 +70,7 @@ export function detectSimpleColoring(
       // Wrap: a color that has two cells sharing a unit is impossible.
       for (const grp of [group0, group1]) {
         if (hasPeerPair(grp)) {
-          const elim = grp
-            .filter((c) => board[c].notes.has(digit))
-            .map((c) => ({ index: c, digit }));
+          const elim = grp.map((c) => ({ index: c, digit }));
           if (elim.length) {
             return buildHint('wrap', digit, group0, group1, elim, links);
           }
@@ -91,7 +89,7 @@ export function detectSimpleColoring(
           if (set0.has(p)) sees0 = true;
           if (set1.has(p)) sees1 = true;
         }
-        if (sees0 && sees1 && board[t].notes.has(digit)) elim.push({ index: t, digit });
+        if (sees0 && sees1) elim.push({ index: t, digit });
       }
       if (elim.length) {
         return buildHint('trap', digit, group0, group1, elim, links);

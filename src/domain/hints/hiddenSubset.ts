@@ -51,7 +51,7 @@ export function detectHiddenSubset(
       const eliminations: { index: CellIndex; digit: Digit }[] = [];
       for (const i of cells) {
         for (const d of candidates.get(i)!) {
-          if (!comboSet.has(d) && board[i].notes.has(d)) {
+          if (!comboSet.has(d)) {
             eliminations.push({ index: i, digit: d });
           }
         }

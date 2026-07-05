@@ -35,7 +35,7 @@ export function detectClaiming(
       const eliminations: { index: CellIndex; digit: Digit }[] = [];
       for (const i of getBoxIndices(box)) {
         if (line.indices.includes(i)) continue;
-        if (candidates.get(i)?.has(digit) && board[i].notes.has(digit)) {
+        if (candidates.get(i)?.has(digit)) {
           eliminations.push({ index: i, digit });
         }
       }

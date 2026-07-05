@@ -29,7 +29,14 @@ export interface HintPresentation {
   /** Index of the first 'explain' frame — the step-dot indicator spans from here. */
   firstExplainIndex: number;
   action: HintAction;
+  /** Label for the final frame's primary button ("Apply" family). */
+  applyLabel: string;
 }
+
+const APPLY_LABELS: Partial<Record<HintAction['kind'], string>> = {
+  erase: 'Remove it',
+  add_note: 'Add note',
+};
 
 export function buildHintPresentation(hint: Hint): HintPresentation {
   const lesson = TECHNIQUE_CATALOG[hint.technique];
@@ -62,5 +69,6 @@ export function buildHintPresentation(hint: Hint): HintPresentation {
     frames,
     firstExplainIndex: 2,
     action: hint.action,
+    applyLabel: APPLY_LABELS[hint.action.kind] ?? 'Apply',
   };
 }

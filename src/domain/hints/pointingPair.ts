@@ -36,7 +36,7 @@ export function detectPointingPair(
       const eliminations: { index: CellIndex; digit: Digit }[] = [];
       for (const i of line.indices) {
         if (boxOf(i) === box) continue;
-        if (candidates.get(i)?.has(digit) && board[i].notes.has(digit)) {
+        if (candidates.get(i)?.has(digit)) {
           eliminations.push({ index: i, digit });
         }
       }

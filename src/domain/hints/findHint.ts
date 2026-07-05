@@ -4,13 +4,19 @@
  * tried in increasing difficulty so the player always learns the simplest next
  * move first.
  *
+ * Before the ladder runs, two board-state checks fire (see `boardChecks.ts`):
+ * a wrongly placed value is pointed out, and a notes-set missing its solution
+ * digit gets that digit back. After those, detectors reason from the player's
+ * accumulated notes (`hintCandidates`), so eliminations from earlier hints
+ * chain into later ones — exactly like the offline grader.
+ *
  * Every returned hint is guaranteed to change the board when applied — it
  * either places a value or removes at least one of the player's penciled notes.
  * A logically-correct hint that wouldn't actually change anything is skipped.
  */
 
-import { allCandidates } from '../candidates';
-import type { Board, CellIndex, Digit } from '../types';
+import { candidatesFor } from '../candidates';
+import type { Board, Cell, CellIndex, Digit } from '../types';
 import { detectNakedSingle } from './nakedSingle';
 import { detectHiddenSingle } from './hiddenSingle';
 import { detectNakedSubset } from './nakedSubset';
@@ -32,7 +38,23 @@ import { detectBug1 } from './bug1';
 import { detectSimpleColoring } from './simpleColoring';
 import { detectAlsXz } from './alsXz';
 import { detectAic } from './aic';
+import { detectFinnedFish } from './finnedFish';
+import { detectUniqueRectangleType3 } from './uniqueRectangleType3';
+import { detectUniqueRectangleType5 } from './uniqueRectangleType5';
+import { detectUniqueRectangleType6 } from './uniqueRectangleType6';
+import { detectHiddenRectangle } from './hiddenRectangle';
+import { detectWxyzWing } from './wxyzWing';
+import { detectMedusa3d } from './medusa3d';
+import { detectGroupedAic } from './chain/chainEngine';
+import { detectAlsChain, detectAlsXyWing } from './alsChain';
+import {
+  detectCellForcingChain,
+  detectDynamicForcingChain,
+  detectNishio,
+  detectUnitForcingChain,
+} from './forcingChains';
 import { solveBoard, bruteForceHint } from './bruteForce';
+import { findMissingNote, findMistake, mistakeHint, missingNoteHint } from './boardChecks';
 import type { Hint, HintAction } from './types';
 
 export type Detector = (board: Board, candidates: Map<CellIndex, Set<Digit>>) => Hint | null;
@@ -53,22 +75,40 @@ export const DETECTORS: Detector[] = [
   (b, c) => detectNakedSubset(b, c, 4), // naked quad
   (b, c) => detectHiddenSubset(b, c, 4), // hidden quad
   (b, c) => detectFish(b, c, 2), // X-Wing
+  (b, c) => detectFinnedFish(b, c, 2), // Finned/Sashimi X-Wing
   detectSkyscraper,
   detectTwoStringKite,
   detectEmptyRectangle,
   detectXYWing,
   detectXYZWing,
   detectWWing,
+  detectWxyzWing,
   (b, c) => detectFish(b, c, 3), // Swordfish
+  (b, c) => detectFinnedFish(b, c, 3), // Finned Swordfish
   (b, c) => detectFish(b, c, 4), // Jellyfish
+  (b, c) => detectFinnedFish(b, c, 4), // Finned Jellyfish
   detectUniqueRectangle,
   detectUniqueRectangleType2,
+  detectUniqueRectangleType3,
   detectUniqueRectangleType4,
+  detectUniqueRectangleType5,
+  detectUniqueRectangleType6,
+  detectHiddenRectangle,
   detectRemotePair,
   detectBug1,
   detectSimpleColoring,
+  detectMedusa3d,
   detectAic, // X-Chain / XY-Chain / Nice Loops
+  detectGroupedAic,
   detectAlsXz,
+  detectAlsXyWing,
+  detectAlsChain,
+  // Forcing chains — the completeness rungs; only reached when everything
+  // above stalls, and the reason "Last Resort" should essentially never fire.
+  detectNishio,
+  detectCellForcingChain,
+  detectUnitForcingChain,
+  detectDynamicForcingChain,
 ];
 
 /**
@@ -94,37 +134,107 @@ export function firstApplicableHint(
   return null;
 }
 
-export function findHint(board: Board): Hint | null {
-  const candidates = allCandidates(board);
+/**
+ * The candidate map detectors reason from. Cells with penciled notes contribute
+ * `notes ∩ legal candidates` — the player's accumulated eliminations, minus any
+ * note gone stale (a peer value placed with note-validation off). Note-less
+ * cells contribute their full legal candidates, so no-notes play still gets
+ * every placement technique. Mirrors the grader's `candidatesFromNotes`, which
+ * is what lets elimination hints chain across requests.
+ */
+export function hintCandidates(board: Board): Map<CellIndex, Set<Digit>> {
+  const result = new Map<CellIndex, Set<Digit>>();
+  for (let i = 0; i < board.length; i++) {
+    if (board[i].value !== null) continue;
+    const legal = candidatesFor(board, i);
+    const notes = board[i].notes;
+    result.set(
+      i,
+      notes.size > 0 ? new Set(legal.filter((d) => notes.has(d))) : new Set(legal),
+    );
+  }
+  return result;
+}
+
+/**
+ * Resolve the puzzle's true solution. Prefer the stored solution string; when
+ * absent (older saves, tests), solve the *givens-only* board — never the
+ * current one, whose wrong values would poison the result.
+ */
+function resolveSolution(board: Board, solutionStr?: string | null): Digit[] | null {
+  if (solutionStr && solutionStr.length === board.length) {
+    const parsed = [...solutionStr].map(Number);
+    if (parsed.every((d) => d >= 1 && d <= 9)) return parsed as Digit[];
+  }
+  const givensOnly: Board = board.map(
+    (cell): Cell =>
+      cell.given ? cell : { value: null, given: false, notes: new Set() },
+  );
+  return solveBoard(givensOnly);
+}
+
+export function findHint(board: Board, solutionStr?: string | null): Hint | null {
   // The unique solution doubles as a soundness check: a placement must match it
   // and an elimination must never remove a solution digit. This guards against
   // any detector bug — an unsound hint is skipped rather than shown.
-  const solution = solveBoard(board);
+  const solution = resolveSolution(board, solutionStr);
+  if (!solution) return null;
 
-  const hint = firstApplicableHint(board, candidates, solution);
+  // A wrong value corrupts every peer's candidates — surface it before anything.
+  const mistake = findMistake(board, solution);
+  if (mistake !== null) return mistakeHint(board, mistake);
+
+  // Notes omitting their cell's solution digit make note-based reasoning
+  // unsound; restore the specific missing digit before running the ladder.
+  const missing = findMissingNote(board, solution);
+  if (missing) return missingNoteHint(missing.index, missing.digit);
+
+  const hint = firstApplicableHint(board, hintCandidates(board), solution);
   if (hint) return hint;
 
   // Nothing learnable applies — fall back to a guaranteed (validated) placement.
-  if (solution) return bruteForceHint(board, solution);
-  return null;
+  return bruteForceHint(board, solution);
 }
 
-/** True if applying the action would place a value or remove an existing note. */
+/** True if applying the action would visibly change the board. */
 function actionChangesBoard(board: Board, action: HintAction): boolean {
-  if (action.kind === 'place') {
-    return (action.placements ?? []).some(
-      ({ index, digit }) => !board[index].given && board[index].value !== digit,
-    );
+  switch (action.kind) {
+    case 'place':
+      return (action.placements ?? []).some(
+        ({ index, digit }) => !board[index].given && board[index].value !== digit,
+      );
+    case 'eliminate':
+      // A note-less empty target still counts: Apply first pencils in the
+      // cell's candidates, then strikes the eliminated ones (see
+      // `applyEliminations`'s `seedEmptyTargets`).
+      return (action.eliminations ?? []).some(
+        ({ index, digit }) =>
+          board[index].notes.has(digit) ||
+          (board[index].value === null && board[index].notes.size === 0),
+      );
+    case 'erase':
+      return (action.cells ?? []).some(
+        (index) => !board[index].given && board[index].value !== null,
+      );
+    case 'add_note':
+      return (action.additions ?? []).some(
+        ({ index, digit }) =>
+          board[index].value === null && !board[index].notes.has(digit),
+      );
   }
-  return (action.eliminations ?? []).some(
-    ({ index, digit }) => board[index].notes.has(digit),
-  );
 }
 
 /** A placement must match the solution; an elimination must not drop a solution digit. */
 function isHintSound(hint: Hint, solution: Digit[]): boolean {
-  if (hint.action.kind === 'place') {
-    return (hint.action.placements ?? []).every((p) => solution[p.index] === p.digit);
+  switch (hint.action.kind) {
+    case 'place':
+      return (hint.action.placements ?? []).every((p) => solution[p.index] === p.digit);
+    case 'eliminate':
+      return (hint.action.eliminations ?? []).every((e) => solution[e.index] !== e.digit);
+    case 'erase':
+      // Removing a value never contradicts the solution.
+      return true;
+    case 'add_note':
+      return (hint.action.additions ?? []).every((a) => solution[a.index] === a.digit);
   }
-  return (hint.action.eliminations ?? []).every((e) => solution[e.index] !== e.digit);
 }

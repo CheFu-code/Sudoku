@@ -11,7 +11,7 @@ import { ALL_UNITS, combinations } from './units';
 import { formatDigits } from './text';
 import type { Hint, CellAnnotation } from './types';
 
-interface Als {
+export interface Als {
   cells: CellIndex[];
   digits: Set<Digit>;
 }
@@ -43,7 +43,7 @@ export function detectAlsXz(
           const eliminations: { index: CellIndex; digit: Digit }[] = [];
           for (const [t, tc] of candidates) {
             if (A.cells.includes(t) || B.cells.includes(t)) continue;
-            if (!tc.has(z) || !board[t].notes.has(z)) continue;
+            if (!tc.has(z)) continue;
             if (seers.every((s) => getPeers(t).has(s))) {
               eliminations.push({ index: t, digit: z });
             }
@@ -103,7 +103,7 @@ export function detectAlsXz(
 }
 
 /** Every X-cell of A sees every X-cell of B (so X is in at most one set). */
-function isRestrictedCommon(
+export function isRestrictedCommon(
   A: Als,
   B: Als,
   x: Digit,
@@ -115,13 +115,16 @@ function isRestrictedCommon(
   return aX.every((a) => bX.every((b) => a !== b && getPeers(a).has(b)));
 }
 
-/** ALSes of size 1-3 within a single unit (N cells, N+1 candidate digits). */
-function enumerateAls(candidates: Map<CellIndex, Set<Digit>>): Als[] {
+/** ALSes of size 1..maxSize within a single unit (N cells, N+1 candidate digits). */
+export function enumerateAls(
+  candidates: Map<CellIndex, Set<Digit>>,
+  maxSize = 3,
+): Als[] {
   const out: Als[] = [];
   const seen = new Set<string>();
   for (const unit of ALL_UNITS) {
     const cells = unit.indices.filter((i) => candidates.has(i));
-    for (let size = 1; size <= 3; size++) {
+    for (let size = 1; size <= maxSize; size++) {
       for (const combo of combinations(cells, size)) {
         const digits = new Set<Digit>();
         for (const c of combo) for (const d of candidates.get(c)!) digits.add(d);

@@ -47,7 +47,7 @@ export function detectUniqueRectangle(
 
             const target = cells[k];
             const eliminations = ([x, y] as Digit[])
-              .filter((d) => board[target].notes.has(d))
+              .filter((d) => extra.has(d))
               .map((d) => ({ index: target, digit: d }));
             if (eliminations.length === 0) continue;
 

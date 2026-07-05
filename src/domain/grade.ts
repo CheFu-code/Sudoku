@@ -47,22 +47,42 @@ export const TECHNIQUE_TIER: Record<TechniqueId, Difficulty> = {
   empty_rectangle: 'expert',
   xyz_wing: 'expert',
   w_wing: 'expert',
+  wxyz_wing: 'expert',
   swordfish: 'expert',
   jellyfish: 'expert',
+  finned_x_wing: 'expert',
+  finned_swordfish: 'expert',
+  finned_jellyfish: 'expert',
   unique_rectangle: 'expert',
   unique_rectangle_2: 'expert',
+  unique_rectangle_3: 'expert',
   unique_rectangle_4: 'expert',
+  unique_rectangle_5: 'expert',
+  unique_rectangle_6: 'expert',
+  hidden_rectangle: 'expert',
 
   remote_pair: 'extreme',
   bug1: 'extreme',
   simple_coloring: 'extreme',
+  medusa_3d: 'extreme',
   aic: 'extreme',
+  grouped_aic: 'extreme',
 
-  // ALS-XZ is the hardest technique our ladder reaches, and a puzzle that stalls
-  // needs something beyond it (or trial-and-error). Both are the truly brutal
-  // grids that define the top tier.
+  // The ALS and forcing-chain families are the truly brutal rungs; a puzzle
+  // that *still* stalls past them needs trial-and-error. All define the top tier.
   als_xz: 'diabolical',
+  als_xy_wing: 'diabolical',
+  als_chain: 'diabolical',
+  nishio_forcing_chain: 'diabolical',
+  cell_forcing_chain: 'diabolical',
+  unit_forcing_chain: 'diabolical',
+  dynamic_forcing_chain: 'diabolical',
   brute_force: 'diabolical',
+
+  // Board-state checks, never fired by the grader (its board has no mistakes
+  // and complete seeded notes). Present only to keep the Record total.
+  mistake: 'easy',
+  missing_note: 'easy',
 };
 
 /**
@@ -78,27 +98,47 @@ export const TECHNIQUE_RATING: Record<TechniqueId, number> = {
   naked_pair: 3.0,
   x_wing: 3.2,
   hidden_pair: 3.4,
+  finned_x_wing: 3.5,
   naked_triple: 3.6,
   swordfish: 3.8,
   hidden_triple: 4.0,
   skyscraper: 4.0,
   two_string_kite: 4.0,
+  finned_swordfish: 4.1,
   xy_wing: 4.2,
   xyz_wing: 4.4,
   w_wing: 4.4,
   empty_rectangle: 4.5,
   unique_rectangle: 4.5,
   unique_rectangle_2: 4.6,
+  unique_rectangle_3: 4.6,
+  unique_rectangle_5: 4.6,
+  unique_rectangle_6: 4.6,
   unique_rectangle_4: 4.7,
+  hidden_rectangle: 4.8,
+  wxyz_wing: 4.8,
   naked_quad: 5.0,
   remote_pair: 5.0,
   simple_coloring: 5.0,
   jellyfish: 5.2,
+  finned_jellyfish: 5.4,
   hidden_quad: 5.4,
   bug1: 5.6,
+  medusa_3d: 5.6,
   aic: 7.0,
+  grouped_aic: 7.1,
   als_xz: 7.5,
-  brute_force: 9.0,
+  nishio_forcing_chain: 7.8,
+  als_xy_wing: 8.0,
+  als_chain: 8.2,
+  cell_forcing_chain: 8.4,
+  unit_forcing_chain: 8.5,
+  dynamic_forcing_chain: 9.0,
+  brute_force: 10.0,
+  // Board-state checks — rated below every real technique so they can never
+  // become a puzzle's `hardestTechnique`.
+  mistake: 0,
+  missing_note: 0,
 };
 
 const TIER_SEVERITY: Record<Difficulty, number> = {
@@ -140,9 +180,10 @@ function candidatesFromNotes(board: Board): Map<CellIndex, Set<Digit>> {
   return map;
 }
 
-// Safety cap: a correct solve needs < 200 steps; this only guards against a
-// detector that reports a "changing" move that doesn't actually converge.
-const MAX_STEPS = 400;
+// Safety cap: forcing-chain-heavy solves take many small elimination steps;
+// this only guards against a detector that reports a "changing" move that
+// doesn't actually converge.
+const MAX_STEPS = 800;
 
 /**
  * Grade a puzzle from its 81-char givens string ('.' or '0' for blanks).

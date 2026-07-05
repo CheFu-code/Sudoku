@@ -44,7 +44,7 @@ export function detectNakedSubset(
       for (const i of unit.indices) {
         if (combo.includes(i)) continue;
         for (const d of digits) {
-          if (candidates.get(i)?.has(d) && board[i].notes.has(d)) {
+          if (candidates.get(i)?.has(d)) {
             eliminations.push({ index: i, digit: d });
           }
         }

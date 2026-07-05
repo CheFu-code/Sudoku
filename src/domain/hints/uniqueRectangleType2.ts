@@ -47,7 +47,7 @@ export function detectUniqueRectangleType2(
           const eliminations: { index: CellIndex; digit: Digit }[] = [];
           for (const cell of getPeers(roofA)) {
             if (cell === roofB || !peersB.has(cell)) continue;
-            if (candidates.get(cell)?.has(z) && board[cell].notes.has(z)) {
+            if (candidates.get(cell)?.has(z)) {
               eliminations.push({ index: cell, digit: z });
             }
           }

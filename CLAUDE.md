@@ -132,6 +132,14 @@ scripts/
     technique; `rating` is approximate. Then run `scripts/apply-se-ratings.ts` to
     overwrite with real SE scores.
   - `hardestTechnique` is always populated via `gradePuzzle` on the final set.
+- **Solvability invariant:** every easy–extreme puzzle must be fully solvable by
+  the in-app `DETECTORS` ladder (`gradePuzzle(...).solved === true`) — a stall
+  would show the player a "Last Resort" trial-and-error hint, allowed only in
+  diabolical. `build-puzzle-bank.ts` re-files stalls to diabolical; after any
+  ladder change run `npm run regrade:puzzles` (supports `TIER=`/`SLICE=`/`MERGE=`
+  parallel mode) and the guardrail `npm run test:bank`
+  (`src/domain/__tests__/bankGuardrail.test.ts`; its fast metadata layer runs in
+  every `npm test`).
 - **Build the workflow:** `PER_TIER=500 PUZZLE_CSV=./sudoku-3m.csv npx tsx scripts/build-puzzle-bank.ts`.
 - **skfr binary** (gitignored, machine-specific). On Apple Silicon build for
   x86_64 + run under Rosetta:

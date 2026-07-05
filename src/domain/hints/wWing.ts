@@ -42,7 +42,7 @@ export function detectWWing(
           const eliminations: { index: CellIndex; digit: Digit }[] = [];
           for (const cell of getPeers(a)) {
             if (cell === b || !peersB.has(cell)) continue;
-            if (candidates.get(cell)?.has(elimDigit) && board[cell].notes.has(elimDigit)) {
+            if (candidates.get(cell)?.has(elimDigit)) {
               eliminations.push({ index: cell, digit: elimDigit });
             }
           }

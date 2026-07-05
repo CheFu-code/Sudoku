@@ -6,6 +6,7 @@
 
 import { createBoard } from '../domain/board';
 import { createHistory } from '../domain/history';
+import type { Digit } from '../domain/types';
 import { getRepositories } from '../data';
 import { useGameStore } from './gameStore';
 
@@ -119,5 +120,68 @@ describe('gameStore hint session', () => {
     const s = useGameStore.getState();
     expect(s.hint).toBeNull();
     expect(s.board[0].value).toBe(9);
+  });
+});
+
+describe('gameStore board-check hints', () => {
+  // A real bank puzzle with its solution, so requestHint validates against the
+  // stored solution instead of re-solving the (possibly wrong) board.
+  const GIVENS =
+    '8..9........524.....5.1.67..2......45.17....3.......164....8..1....6...7......89.';
+  const SOLUTION =
+    '813976425697524138245813679329681754561749283784235916472398561958162347136457892';
+
+  function startAicGame() {
+    recordEvent.mockClear();
+    useGameStore.setState({
+      status: 'playing',
+      puzzle: { id: 'aic', difficulty: 'extreme', givens: GIVENS, solution: SOLUTION },
+      board: createBoard(GIVENS),
+      history: createHistory(),
+      mistakes: 0,
+      hint: null,
+      hintStep: 0,
+      hintMaxStep: 0,
+      hintsUsed: 0,
+    });
+  }
+
+  it('surfaces a wrong value as a mistake hint; Apply erases it', () => {
+    startAicGame();
+    // Solution at index 1 is 1 — play a wrong 3 (via the store, counts a mistake).
+    useGameStore.setState({ selectedIndex: 1 });
+    useGameStore.getState().pressDigit(3);
+    expect(useGameStore.getState().mistakes).toBe(1);
+
+    useGameStore.getState().requestHint();
+    const hint = useGameStore.getState().hint!;
+    expect(hint.technique).toBe('mistake');
+    expect(hint.applyLabel).toBe('Remove it');
+
+    useGameStore.getState().applyHint();
+    const s = useGameStore.getState();
+    expect(s.board[1].value).toBeNull();
+    // Erasing via the hint never bumps the mistakes counter again.
+    expect(s.mistakes).toBe(1);
+  });
+
+  it('restores a missing note via an add_note hint', () => {
+    startAicGame();
+    useGameStore.getState().fastPencil(); // auto-notes
+    const board = useGameStore.getState().board;
+    const target = board.findIndex((c) => c.value === null);
+    const sol = Number(SOLUTION[target]) as Digit;
+    // Remove the solution digit from that cell's notes.
+    useGameStore.setState({ selectedIndex: target, pencilMode: true });
+    useGameStore.getState().pressDigit(sol);
+    expect(useGameStore.getState().board[target].notes.has(sol)).toBe(false);
+
+    useGameStore.getState().requestHint();
+    const hint = useGameStore.getState().hint!;
+    expect(hint.technique).toBe('missing_note');
+    expect(hint.applyLabel).toBe('Add note');
+
+    useGameStore.getState().applyHint();
+    expect(useGameStore.getState().board[target].notes.has(sol)).toBe(true);
   });
 });
