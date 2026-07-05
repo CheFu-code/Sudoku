@@ -40,7 +40,7 @@ export function detectSkyscraper(
           const eliminations: { index: CellIndex; digit: Digit }[] = [];
           for (const cell of getPeers(r1)) {
             if (cell === r2 || !peersR2.has(cell)) continue;
-            if (candidates.get(cell)?.has(digit) && board[cell].notes.has(digit)) {
+            if (candidates.get(cell)?.has(digit)) {
               eliminations.push({ index: cell, digit });
             }
           }

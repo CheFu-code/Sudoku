@@ -36,6 +36,12 @@ function locusCells(hint: Hint): CellIndex[] {
   if (hint.action.kind === 'place') {
     return (hint.action.placements ?? []).map((p) => p.index);
   }
+  if (hint.action.kind === 'erase') {
+    return hint.action.cells ?? [];
+  }
+  if (hint.action.kind === 'add_note') {
+    return (hint.action.additions ?? []).map((a) => a.index);
+  }
   const intro = hint.steps[0]?.annotations ?? {};
   const pattern = Object.entries(intro)
     .filter(([, a]) => (a.highlightNotes?.length ?? 0) > 0)

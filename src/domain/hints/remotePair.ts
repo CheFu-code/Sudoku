@@ -65,7 +65,7 @@ export function detectRemotePair(
         }
         if (!(sees0 && sees1)) continue;
         for (const d of [x, y] as Digit[]) {
-          if (tc.has(d) && board[t].notes.has(d)) eliminations.push({ index: t, digit: d });
+          if (tc.has(d)) eliminations.push({ index: t, digit: d });
         }
       }
       if (eliminations.length === 0) continue;

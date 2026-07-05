@@ -374,13 +374,32 @@ function collectGenerated(c: Collector): void {
 
 // --- Post-processing & reporting ------------------------------------------
 
-/** Populate hardestTechnique on the final selection (skfr path leaves it unset). */
+/**
+ * Populate hardestTechnique on the final selection (skfr path leaves it unset)
+ * and enforce the solvability invariant: every easy–extreme puzzle must be
+ * fully solvable by the in-app technique ladder — a puzzle the ladder stalls
+ * on would show the player a "Last Resort" (trial-and-error) hint. Stalls are
+ * re-filed to diabolical regardless of their SE band; ids keep their original
+ * tier prefix (ids are opaque to the app).
+ */
 function annotateTechniques(bank: Bank): void {
+  let demoted = 0;
   for (const d of DIFFICULTIES) {
+    const keep: Puzzle[] = [];
     for (const p of bank[d]) {
-      if (p.hardestTechnique) continue;
-      p.hardestTechnique = gradePuzzle(p.givens).hardestTechnique;
+      const grade = gradePuzzle(p.givens);
+      p.hardestTechnique = grade.hardestTechnique;
+      if (!grade.solved && d !== 'diabolical') {
+        bank.diabolical.push({ ...p, difficulty: 'diabolical' });
+        demoted++;
+      } else {
+        keep.push(p);
+      }
     }
+    bank[d] = keep;
+  }
+  if (demoted > 0) {
+    console.log(`Solvability check: ${demoted} ladder-stalling puzzle(s) re-filed to diabolical.`);
   }
 }
 

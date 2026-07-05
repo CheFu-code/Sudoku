@@ -6,7 +6,7 @@
  * No framework or storage imports — this module is fully unit-testable.
  */
 
-import { allCandidates } from './candidates';
+import { allCandidates, candidatesFor } from './candidates';
 import { cloneCell, withCell } from './board';
 import { getPeers, isValidPlacement } from './rules';
 import type { Board, Cell, CellIndex, Digit, Move } from './types';
@@ -134,15 +134,28 @@ export function applyAutoNotes(board: Board): EngineResult | null {
  * Remove specific candidates from cells' pencil notes, as one batched, undoable
  * move. Used by Smart Hint's elimination techniques (naked/pointing pair).
  * Only digits actually penciled are removed; returns `null` if nothing changes.
+ *
+ * With `seedEmptyTargets`, an empty target cell with no notes first gets its
+ * legal candidates penciled in, then the eliminated digits struck — so a
+ * no-notes player can still apply an elimination hint. Only the target cells
+ * are seeded, never the whole board, and it all stays one undoable move.
  */
 export function applyEliminations(
   board: Board,
   eliminations: { index: CellIndex; digit: Digit }[],
+  seedEmptyTargets = false,
 ): EngineResult | null {
-  // Group the digits to strip per cell, keeping only ones currently noted.
+  // Cells to seed with their legal candidates before striking.
+  const seed = new Set<CellIndex>();
+  // Group the digits to strip per cell, keeping only ones currently noted
+  // (or about to be seeded).
   const perCell = new Map<CellIndex, Set<Digit>>();
   for (const { index, digit } of eliminations) {
-    if (board[index].notes.has(digit)) {
+    const cell = board[index];
+    const seeding =
+      seedEmptyTargets && cell.value === null && cell.notes.size === 0;
+    if (seeding) seed.add(index);
+    if (cell.notes.has(digit) || seeding) {
       (perCell.get(index) ?? perCell.set(index, new Set()).get(index)!).add(digit);
     }
   }
@@ -152,7 +165,9 @@ export function applyEliminations(
   const before = snapshot(board, indices);
   const nextBoard = board.slice();
   for (const index of indices) {
-    const notes = new Set(nextBoard[index].notes);
+    const notes = seed.has(index)
+      ? new Set(candidatesFor(board, index))
+      : new Set(nextBoard[index].notes);
     for (const d of perCell.get(index)!) notes.delete(d);
     nextBoard[index] = { ...nextBoard[index], notes };
   }

@@ -38,7 +38,7 @@ export function detectTwoStringKite(
             // along its row), keeping it off both conjugate lines.
             const target = indexOf(rowOf(colEnd), colOf(rowEnd));
             if (target === rowEnd || target === colEnd || target === ra || target === cb) continue;
-            if (!(candidates.get(target)?.has(digit) && board[target].notes.has(digit))) continue;
+            if (!candidates.get(target)?.has(digit)) continue;
 
             const intro: Record<CellIndex, CellAnnotation> = {
               [ra]: { tint: 'focus', highlightNotes: [digit] },

@@ -164,14 +164,18 @@ function CellComponent({
         <Animated.Text style={[styles.value, fontSizes && { fontSize: fontSizes.value }, valueAnim]}>
           {cell.value}
         </Animated.Text>
-      ) : cell.notes.size > 0 ? (
+      ) : cell.notes.size > 0 ||
+        (annotation?.strikeNotes?.length ?? 0) > 0 ||
+        (annotation?.highlightNotes?.length ?? 0) > 0 ? (
         <View style={styles.notes}>
           {DIGITS.map((d) => {
             const has = cell.notes.has(d);
             const activeNote = has && d === activeValue;
             // Smart Hint candidate-level emphasis (only set during a hint).
-            const struck = has && !!annotation?.strikeNotes?.includes(d);
-            const highlit = has && !!annotation?.highlightNotes?.includes(d);
+            // Annotated candidates render even when unpenciled — as faint
+            // ghosts — so a no-notes player can still follow the walkthrough.
+            const struck = !!annotation?.strikeNotes?.includes(d);
+            const highlit = !!annotation?.highlightNotes?.includes(d);
             // Fast Mode's active note and a hint's highlighted candidate both
             // read as a blue mini-box with a white digit (struck/eliminated notes
             // keep their red strike-through instead).
@@ -197,7 +201,7 @@ function CellComponent({
                           : selected || annotation?.tint === 'focus'
                             ? 'rgba(255,255,255,0.85)'
                             : c.note,
-                        opacity: has ? 1 : 0,
+                        opacity: has ? 1 : struck ? 0.55 : 0,
                       },
                     ]}
                   >

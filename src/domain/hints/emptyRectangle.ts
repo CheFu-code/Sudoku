@@ -70,7 +70,7 @@ function tryConjugate(
     const target =
       kind === 'col' ? indexOf(rowOf(other), hc) : indexOf(hr, colOf(other));
     if (boxOf(target) === box) continue;
-    if (!(candidates.get(target)?.has(digit) && board[target].notes.has(digit))) continue;
+    if (!candidates.get(target)?.has(digit)) continue;
 
     const boxCells = getBoxIndices(box).filter((i) => candidates.get(i)?.has(digit));
     const intro: Record<CellIndex, CellAnnotation> = {};

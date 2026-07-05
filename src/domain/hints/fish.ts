@@ -87,7 +87,7 @@ export function detectFish(
         for (const cv of coverSet) {
           for (const cell of orient.coverCells(cv)) {
             if (baseSet.has(orient.baseIndexOf(cell))) continue;
-            if (candidates.get(cell)?.has(digit) && board[cell].notes.has(digit)) {
+            if (candidates.get(cell)?.has(digit)) {
               eliminations.push({ index: cell, digit });
             }
           }

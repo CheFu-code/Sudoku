@@ -136,7 +136,7 @@ describe('detectNakedSubset — pair (size 2)', () => {
     expect(reveal[indexOf(0, 6)].strikeNotes?.sort()).toEqual([8, 9]);
   });
 
-  it('does not fire when the eliminated digits are not penciled anywhere', () => {
+  it('fires without notes; applying seeds the target cell and strikes the digits', () => {
     const noNotes = createBoard(
       givens({
         0: '1', 1: '2', 2: '3', 3: '4', 4: '5', 5: '6',
@@ -144,8 +144,17 @@ describe('detectNakedSubset — pair (size 2)', () => {
         [indexOf(6, 8)]: '7',
       }),
     );
-    // The pair exists logically, but (0,6) has no notes to remove.
-    expect(detectNakedSubset(noNotes, cands(noNotes), 2)).toBeNull();
+    // Detectors trust the candidates map alone; visible-change gating lives in
+    // findHint's actionChangesBoard, and Apply seeds note-less target cells.
+    const hint = detectNakedSubset(noNotes, cands(noNotes), 2);
+    expect(hint?.technique).toBe('naked_pair');
+    const res = applyEliminations(noNotes, hint!.action.eliminations!, true);
+    // (0,6) was {7,8,9}; seeding pencils that in, then 8 and 9 are struck.
+    expect([...res!.board[indexOf(0, 6)].notes]).toEqual([7]);
+    // One undo restores the cell to note-less.
+    const history = pushMove(createHistory(), res!.move);
+    const undone = undo(res!.board, history)!;
+    expect(undone.board[indexOf(0, 6)].notes.size).toBe(0);
   });
 
   it('does not fire on an empty board', () => {

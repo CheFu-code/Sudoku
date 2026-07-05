@@ -40,7 +40,7 @@ export function detectXYZWing(
         for (const cell of getPeers(a)) {
           if (cell === pivot || cell === b) continue;
           if (!peersB.has(cell) || !peersP.has(cell)) continue;
-          if (candidates.get(cell)?.has(z) && board[cell].notes.has(z)) {
+          if (candidates.get(cell)?.has(z)) {
             eliminations.push({ index: cell, digit: z });
           }
         }

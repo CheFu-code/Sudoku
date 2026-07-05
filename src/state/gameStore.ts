@@ -19,7 +19,7 @@ import {
 } from '../domain/engine';
 import { getPeers, isValidPlacement } from '../domain/rules';
 import { buildHintPresentation, findHint } from '../domain/hints';
-import type { HintPresentation } from '../domain/hints';
+import type { HintAction, HintPresentation } from '../domain/hints';
 import type { EngineResult } from '../domain/engine';
 import {
   canUndo,
@@ -278,7 +278,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((s) => ({ fastMode: !s.fastMode, selectedDigit: null })),
 
   requestHint: () => {
-    const raw = findHint(get().board);
+    const raw = findHint(get().board, get().puzzle?.solution || null);
     if (!raw) return; // button is disabled when no hint exists; guard anyway
     const hint = buildHintPresentation(raw);
     set((s) => ({ hint, hintStep: 0, hintMaxStep: 0, hintsUsed: s.hintsUsed + 1 }));
@@ -311,15 +311,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   applyHint: () => {
     const { hint, board, hintMaxStep } = get();
     if (!hint) return;
-    const res: EngineResult | null =
-      hint.action.kind === 'place'
-        ? placeValue(
-            board,
-            hint.action.placements![0].index,
-            hint.action.placements![0].digit,
-            true,
-          )
-        : applyEliminations(board, hint.action.eliminations ?? []);
+    const res: EngineResult | null = applyHintAction(board, hint.action);
 
     emit({
       type: 'hint_used',
@@ -341,6 +333,23 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { status: paused ? 'paused' : 'playing' };
     }),
 }));
+
+/** Translate a hint's action into the matching engine transformation. */
+function applyHintAction(board: Board, action: HintAction): EngineResult | null {
+  switch (action.kind) {
+    case 'place':
+      return placeValue(board, action.placements![0].index, action.placements![0].digit, true);
+    case 'eliminate':
+      // Seed note-less target cells so a no-notes player can still apply.
+      return applyEliminations(board, action.eliminations ?? [], true);
+    case 'erase':
+      return eraseCell(board, action.cells![0]);
+    case 'add_note':
+      // The added note is the cell's solution digit; skip validation so a
+      // transient peer conflict can't block it (mistake hints fire first).
+      return toggleNote(board, action.additions![0].index, action.additions![0].digit, false);
+  }
+}
 
 /**
  * Push an engine result onto the board + history, run the solved-check, emit

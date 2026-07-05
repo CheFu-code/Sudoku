@@ -63,6 +63,28 @@ function hiddenSubset(name: string, count: string, digitsWord: string): Techniqu
   };
 }
 
+/** Shared lesson builder for finned fish (X-Wing/Swordfish/Jellyfish + fin). */
+function finnedFish(name: string, base: string, linesWord: string): TechniqueLesson {
+  return {
+    whatItIs: [
+      t('A '),
+      em(name),
+      t(
+        ` is a ${base} with a flaw: in one of its ${linesWord} lines the digit spills slightly outside the pattern — but only into cells of a single box, the "fin".`,
+      ),
+    ],
+    howItWorks: [
+      [
+        t(`If the fin cells are all false, the pattern is a perfect ${base} and its usual eliminations hold. If a fin cell is true, the digit sits in the fin's box. `),
+        em('Either way'),
+        t(
+          ", cells covered by BOTH outcomes — the normal eliminations that also sit in the fin's box — can never hold the digit.",
+        ),
+      ],
+    ],
+  };
+}
+
 /** Shared lesson for the Unique Rectangle family. */
 const uniqueRectangleLesson: TechniqueLesson = {
   whatItIs: [
@@ -408,7 +430,242 @@ export const TECHNIQUE_CATALOG: Record<TechniqueId, TechniqueLesson> = {
 
   unique_rectangle: uniqueRectangleLesson,
   unique_rectangle_2: uniqueRectangleLesson,
+  unique_rectangle_3: uniqueRectangleLesson,
   unique_rectangle_4: uniqueRectangleLesson,
+  unique_rectangle_5: uniqueRectangleLesson,
+  unique_rectangle_6: uniqueRectangleLesson,
+
+  hidden_rectangle: {
+    whatItIs: [
+      t('A '),
+      em('Hidden Rectangle'),
+      t(
+        ' is a Unique Rectangle buried under extra candidates: one corner holds only the two rectangle digits, and strong links on one of them lock the pattern.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('If the corner opposite the clean two-candidate corner took the second rectangle digit, the strong links would force '),
+        em('all four corners into the same two digits'),
+        t(' — the deadly rectangle a single-solution puzzle can never allow.'),
+      ],
+      [
+        t('So that opposite corner '),
+        em("can't hold"),
+        t(' the second rectangle digit, and the candidate is erased there.'),
+      ],
+    ],
+  },
+
+  finned_x_wing: finnedFish('Finned X-Wing', 'X-Wing', 'two'),
+  finned_swordfish: finnedFish('Finned Swordfish', 'Swordfish', 'three'),
+  finned_jellyfish: finnedFish('Finned Jellyfish', 'Jellyfish', 'four'),
+
+  wxyz_wing: {
+    whatItIs: [
+      t('A '),
+      em('WXYZ-Wing'),
+      t(
+        ' spreads four candidates over four cells — a pivot and three attached cells — arranged so one shared digit Z must land in the pattern.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('The four cells hold only four different digits between them. Follow every way the pattern can resolve: '),
+        em('at least one of its Z candidates is always true'),
+        t(' — there is no arrangement that avoids Z entirely.'),
+      ],
+      [
+        t('So any cell that sees '),
+        em('every Z candidate'),
+        t(' of the pattern can never hold Z, and loses that candidate.'),
+      ],
+    ],
+  },
+
+  medusa_3d: {
+    whatItIs: [
+      t('3D '),
+      em('Medusa'),
+      t(
+        ' extends coloring to several digits at once: strong links between cells AND the two candidates inside two-candidate cells are painted in two alternating colors.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('Wherever a digit fits in only two cells of a unit — or a cell holds only two candidates — the two options form a '),
+        em('strong link'),
+        t(': exactly one of them is true. Painting each side a different color and following every link builds one connected two-color web.'),
+      ],
+      [
+        t('One entire color is true and the other false. If a color '),
+        em('contradicts itself'),
+        t(' (twice in one cell, or twice in a unit for one digit), that whole color is false — and every candidate that conflicts with both colors can be erased.'),
+      ],
+    ],
+  },
+
+  grouped_aic: {
+    whatItIs: [
+      t('A '),
+      em('Grouped Chain'),
+      t(
+        ' is an Alternating Inference Chain whose links may connect groups of candidates — the two or three cells of a digit inside one box-line slice acting as a single unit.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('A group of candidates in a box-line intersection behaves like one chain node: the digit is either '),
+        em('somewhere in the group'),
+        t(' or nowhere in it. That lets strong and weak links pass through slices no single-cell chain could cross.'),
+      ],
+      [
+        t('The chain still alternates strong and weak links, so '),
+        em('at least one endpoint is always true'),
+        t(' — and any candidate that conflicts with both endpoints can be erased.'),
+      ],
+    ],
+  },
+
+  als_xy_wing: {
+    whatItIs: [
+      t('An '),
+      em('ALS-XY-Wing'),
+      t(
+        ' chains three Almost Locked Sets together the way an XY-Wing chains three cells: a middle set connects two outer sets through restricted digits.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('Each restricted digit can appear in only one of the two sets it connects. Follow both ways the middle set can resolve: either way, '),
+        em('one of the outer sets locks'),
+        t(' and must use its copy of the shared digit Z.'),
+      ],
+      [
+        t('So Z is certainly placed in one outer set or the other — and any cell that sees '),
+        em('every Z candidate of both outer sets'),
+        t(' can never hold Z.'),
+      ],
+    ],
+  },
+
+  als_chain: {
+    whatItIs: [
+      t('An '),
+      em('ALS Chain'),
+      t(
+        ' strings several Almost Locked Sets together through restricted common digits, carrying the ALS-XZ logic across the board.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('Each link digit fits in only one of its two neighbouring sets. Push a choice down the chain: every arrangement ends with '),
+        em('one of the end sets locked'),
+        t(', forced to use its copy of the shared digit Z.'),
+      ],
+      [
+        t('So Z lands in one end set or the other, and any cell that sees '),
+        em('every Z candidate of both ends'),
+        t(' loses that candidate.'),
+      ],
+    ],
+  },
+
+  nishio_forcing_chain: {
+    whatItIs: [
+      t('A '),
+      em('Contradiction Chain'),
+      t(
+        ' (Nishio) tests a single candidate: assume it is true, follow the forced consequences, and watch the puzzle break.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('Suppose the candidate '),
+        em('were'),
+        t(
+          ' the value of its cell. Each consequence is forced — a cell down to one option, a unit down to one home for a digit — so the whole line of reasoning is airtight.',
+        ),
+      ],
+      [
+        t('The chain ends in an impossibility: a cell with no candidates left, or a unit with nowhere to put a digit. So the assumption was wrong and '),
+        em('the candidate can be erased'),
+        t('.'),
+      ],
+    ],
+  },
+
+  cell_forcing_chain: {
+    whatItIs: [
+      t('A '),
+      em('Cell Forcing Chain'),
+      t(
+        " tries every candidate of one cell in turn and follows each line of consequences. Whatever ALL the lines agree on must be true.",
+      ),
+    ],
+    howItWorks: [
+      [
+        t('The cell must take '),
+        em('one'),
+        t(
+          ' of its candidates — there is no other option. Each candidate starts its own chain of forced moves.',
+        ),
+      ],
+      [
+        t('If every chain reaches the '),
+        em('same conclusion'),
+        t(
+          ' — some candidate elsewhere always turns off, or some cell always gets the same digit — that conclusion holds no matter which candidate was true, and can be applied.',
+        ),
+      ],
+    ],
+  },
+
+  unit_forcing_chain: {
+    whatItIs: [
+      t('A '),
+      em('Unit Forcing Chain'),
+      t(
+        ' tries every possible home of one digit within a row, column or box, and follows each line of consequences to a common conclusion.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('The unit must place the digit in '),
+        em('one'),
+        t(' of the marked cells. Each placement starts its own chain of forced moves.'),
+      ],
+      [
+        t('Whatever '),
+        em('all the chains agree on'),
+        t(' is true regardless of where the digit really lands — so that shared conclusion can be applied.'),
+      ],
+    ],
+  },
+
+  dynamic_forcing_chain: {
+    whatItIs: [
+      t('A '),
+      em('Dynamic Forcing Chain'),
+      t(
+        ' is a forcing chain that may combine several consequences at once — using locked candidates and pairs mid-chain — to push an assumption to its conclusion.',
+      ),
+    ],
+    howItWorks: [
+      [
+        t('Like any forcing chain, it assumes a candidate and follows what '),
+        em('must'),
+        t(
+          ' happen. Here the consequences may interact: two eliminations can jointly lock a pair or empty a slice, unlocking further forced moves.',
+        ),
+      ],
+      [
+        t('When every branch of the assumption reaches the same conclusion — or the assumption breaks the puzzle — that '),
+        em('conclusion is certain'),
+        t(' and can be applied.'),
+      ],
+    ],
+  },
 
   bug1: {
     whatItIs: [
@@ -534,6 +791,24 @@ export const TECHNIQUE_CATALOG: Record<TechniqueId, TechniqueLesson> = {
       t('No named technique applies here. This step uses '),
       em('trial and error'),
       t(' — testing a candidate and following the consequences until one choice proves right.'),
+    ],
+    howItWorks: [],
+  },
+
+  mistake: {
+    whatItIs: [
+      t('One of your placed digits '),
+      em("doesn't fit the solution"),
+      t(' — every technique would be reasoning from a broken board until it is removed.'),
+    ],
+    howItWorks: [],
+  },
+
+  missing_note: {
+    whatItIs: [
+      t("One cell's pencil marks are "),
+      em('missing a possibility'),
+      t(' — a digit that can still go there. Notes that rule out a true candidate mislead every technique built on them.'),
     ],
     howItWorks: [],
   },

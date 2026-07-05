@@ -49,7 +49,7 @@ export function detectUniqueRectangleType4(
               if (!isConjugate(roofA, roofB, lockDigit, candidates)) continue;
               const eliminations: { index: CellIndex; digit: Digit }[] = [];
               for (const roofCell of [roofA, roofB]) {
-                if (board[roofCell].notes.has(elimDigit)) {
+                if (candidates.get(roofCell)?.has(elimDigit)) {
                   eliminations.push({ index: roofCell, digit: elimDigit });
                 }
               }

@@ -22,21 +22,41 @@ export type TechniqueId =
   | 'x_wing'
   | 'swordfish'
   | 'jellyfish'
+  | 'finned_x_wing'
+  | 'finned_swordfish'
+  | 'finned_jellyfish'
   | 'xy_wing'
   | 'xyz_wing'
   | 'w_wing'
+  | 'wxyz_wing'
   | 'skyscraper'
   | 'two_string_kite'
   | 'remote_pair'
   | 'empty_rectangle'
   | 'unique_rectangle'
   | 'unique_rectangle_2'
+  | 'unique_rectangle_3'
   | 'unique_rectangle_4'
+  | 'unique_rectangle_5'
+  | 'unique_rectangle_6'
+  | 'hidden_rectangle'
   | 'bug1'
   | 'simple_coloring'
+  | 'medusa_3d'
   | 'aic'
+  | 'grouped_aic'
   | 'als_xz'
-  | 'brute_force';
+  | 'als_xy_wing'
+  | 'als_chain'
+  | 'nishio_forcing_chain'
+  | 'cell_forcing_chain'
+  | 'unit_forcing_chain'
+  | 'dynamic_forcing_chain'
+  | 'brute_force'
+  // Board-state checks, not solving techniques: fired by `findHint` before the
+  // detector ladder when the board itself blocks sound reasoning.
+  | 'mistake'
+  | 'missing_note';
 
 /** A run of narration text; `emphasis` runs are rendered in the accent color. */
 export interface TextSegment {
@@ -70,8 +90,8 @@ export interface CellAnnotation {
  * cell plus the digit within it that the chain reasons about.
  */
 export interface ChainLink {
-  from: { index: CellIndex; digit: Digit };
-  to: { index: CellIndex; digit: Digit };
+  from: { index: CellIndex; digit: Digit; cells?: CellIndex[] };
+  to: { index: CellIndex; digit: Digit; cells?: CellIndex[] };
   strong: boolean;
 }
 
@@ -85,12 +105,17 @@ export interface HintStep {
 
 /**
  * What "Apply" does. `place` writes definitive values; `eliminate` removes
- * candidates from the player's pencil notes.
+ * candidates from the player's pencil notes; `erase` clears a wrongly placed
+ * value; `add_note` pencils in a missing candidate.
  */
 export interface HintAction {
-  kind: 'place' | 'eliminate';
+  kind: 'place' | 'eliminate' | 'erase' | 'add_note';
   placements?: { index: CellIndex; digit: Digit }[];
   eliminations?: { index: CellIndex; digit: Digit }[];
+  /** Cells whose value `erase` clears. */
+  cells?: CellIndex[];
+  /** Notes `add_note` pencils in. */
+  additions?: { index: CellIndex; digit: Digit }[];
 }
 
 export interface Hint {
