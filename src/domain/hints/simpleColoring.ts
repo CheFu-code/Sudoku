@@ -130,16 +130,20 @@ function buildHint(
   const revealText =
     mode === 'wrap'
       ? [
-          { text: 'Two cells of one shade share a unit — impossible — so that whole shade can not be ' },
+          { text: 'But two cells of the ' },
+          { text: 'same shade', emphasis: true },
+          { text: " share a row, column or box — they can't both be " },
           { text: String(digit), emphasis: true },
-          { text: ', and is removed.' },
+          { text: '. That whole shade is impossible, so ' },
+          { text: String(digit), emphasis: true },
+          { text: ' is removed from every struck cell.' },
         ]
       : [
           { text: 'The struck cell sees ' },
           { text: 'both shades', emphasis: true },
-          { text: ', so whichever shade is correct, ' },
+          { text: '. Whichever shade turns out true, one of its neighbours is ' },
           { text: String(digit), emphasis: true },
-          { text: ' is impossible there.' },
+          { text: ' — so the cell itself can never be, and loses the candidate.' },
         ];
 
   return {
@@ -148,11 +152,24 @@ function buildHint(
     steps: [
       {
         text: [
-          { text: 'Follow the strong links for ' },
+          { text: 'Focus on the digit ' },
           { text: String(digit), emphasis: true },
-          { text: ' (units where it fits in only two cells). They split these cells into ' },
-          { text: 'two shades', emphasis: true },
-          { text: '.' },
+          { text: '. In several units it fits in ' },
+          { text: 'only two cells', emphasis: true },
+          { text: ' — a strong link: exactly one of the two must be ' },
+          { text: String(digit), emphasis: true },
+          { text: '. Following every link paints these cells in two alternating shades.' },
+        ],
+        annotations: intro,
+        links,
+      },
+      {
+        text: [
+          { text: 'Each link joins opposite shades, so all cells of one shade are ' },
+          { text: String(digit), emphasis: true },
+          { text: ' together — or none of them are. ' },
+          { text: 'Exactly one whole shade is the true one', emphasis: true },
+          { text: "; we just don't know which yet." },
         ],
         annotations: intro,
         links,

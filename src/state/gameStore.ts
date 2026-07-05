@@ -18,8 +18,8 @@ import {
   toggleNote,
 } from '../domain/engine';
 import { getPeers, isValidPlacement } from '../domain/rules';
-import { findHint } from '../domain/hints';
-import type { Hint } from '../domain/hints';
+import { buildHintPresentation, findHint } from '../domain/hints';
+import type { HintPresentation } from '../domain/hints';
 import type { EngineResult } from '../domain/engine';
 import {
   canUndo,
@@ -49,9 +49,12 @@ interface GameState {
   mistakes: number;
   elapsed: number;
   /** Active Smart Hint walkthrough; null when the hint sheet is closed. */
-  hint: Hint | null;
-  /** Current step index within the active hint walkthrough. */
+  hint: HintPresentation | null;
+  /** Current frame index within the active hint walkthrough. */
   hintStep: number;
+  /** Furthest frame reached this hint session (Prev can move `hintStep` back);
+   *  feeds the `hint_used` analytics event's `stageReached`. */
+  hintMaxStep: number;
   /** How many hints the player has opened this game (unlimited; informational). */
   hintsUsed: number;
   /** Transient signal: a rejected (illegal) pencil note. `nonce` bumps each
@@ -127,6 +130,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   elapsed: 0,
   hint: null,
   hintStep: 0,
+  hintMaxStep: 0,
   hintsUsed: 0,
   invalidFlash: null,
   flashCells: null,
@@ -150,6 +154,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       elapsed: 0,
       hint: null,
       hintStep: 0,
+      hintMaxStep: 0,
       hintsUsed: 0,
     });
     emit({ type: 'game_started', difficulty, puzzleId: puzzle.id, at: Date.now() });
@@ -171,6 +176,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       elapsed: 0,
       hint: null,
       hintStep: 0,
+      hintMaxStep: 0,
       hintsUsed: 0,
       invalidFlash: null,
       flashCells: null,
@@ -213,6 +219,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       elapsed: snap.elapsed,
       hint: null,
       hintStep: 0,
+      hintMaxStep: 0,
       hintsUsed: snap.hintsUsed,
     });
     return true;
@@ -271,24 +278,38 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((s) => ({ fastMode: !s.fastMode, selectedDigit: null })),
 
   requestHint: () => {
-    const hint = findHint(get().board);
-    if (!hint) return; // button is disabled when no hint exists; guard anyway
-    set((s) => ({ hint, hintStep: 0, hintsUsed: s.hintsUsed + 1 }));
-    emit({ type: 'hint_used', at: Date.now() });
+    const raw = findHint(get().board);
+    if (!raw) return; // button is disabled when no hint exists; guard anyway
+    const hint = buildHintPresentation(raw);
+    set((s) => ({ hint, hintStep: 0, hintMaxStep: 0, hintsUsed: s.hintsUsed + 1 }));
     persist(get);
   },
 
   nextHintStep: () =>
-    set((s) =>
-      s.hint ? { hintStep: Math.min(s.hintStep + 1, s.hint.steps.length - 1) } : s,
-    ),
+    set((s) => {
+      if (!s.hint) return s;
+      const hintStep = Math.min(s.hintStep + 1, s.hint.frames.length - 1);
+      return { hintStep, hintMaxStep: Math.max(s.hintMaxStep, hintStep) };
+    }),
 
   prevHintStep: () => set((s) => ({ hintStep: Math.max(s.hintStep - 1, 0) })),
 
-  closeHint: () => set({ hint: null, hintStep: 0 }),
+  closeHint: () => {
+    const { hint, hintMaxStep } = get();
+    if (hint) {
+      emit({
+        type: 'hint_used',
+        technique: hint.technique,
+        stageReached: hint.frames[hintMaxStep].stage,
+        applied: false,
+        at: Date.now(),
+      });
+    }
+    set({ hint: null, hintStep: 0, hintMaxStep: 0 });
+  },
 
   applyHint: () => {
-    const { hint, board } = get();
+    const { hint, board, hintMaxStep } = get();
     if (!hint) return;
     const res: EngineResult | null =
       hint.action.kind === 'place'
@@ -300,8 +321,15 @@ export const useGameStore = create<GameState>((set, get) => ({
           )
         : applyEliminations(board, hint.action.eliminations ?? []);
 
+    emit({
+      type: 'hint_used',
+      technique: hint.technique,
+      stageReached: hint.frames[hintMaxStep].stage,
+      applied: true,
+      at: Date.now(),
+    });
     if (res) commitMove(set, get, res);
-    set({ hint: null, hintStep: 0 });
+    set({ hint: null, hintStep: 0, hintMaxStep: 0 });
   },
 
   tick: () =>

@@ -116,8 +116,8 @@ export function GameScreen() {
             fastMode={s.fastMode}
             flashCells={s.flashCells}
             reduceMotion={reduceMotion}
-            hintAnnotations={s.hint ? s.hint.steps[s.hintStep].annotations : undefined}
-            chainLinks={s.hint ? s.hint.steps[s.hintStep].links : undefined}
+            hintAnnotations={s.hint ? s.hint.frames[s.hintStep].annotations : undefined}
+            chainLinks={s.hint ? s.hint.frames[s.hintStep].links : undefined}
             onCellPress={s.selectCell}
           />
         )}

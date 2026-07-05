@@ -178,20 +178,39 @@ function tryEliminate(
     steps: [
       {
         text: [
-          { text: 'Follow the alternating chain — ' },
-          { text: 'solid links', emphasis: true },
-          { text: ' force the next candidate on, ' },
-          { text: 'dashed links', emphasis: true },
-          { text: ' force it off. Either end of the chain must be true.' },
+          { text: 'This chain connects candidates with two kinds of arrows. A ' },
+          { text: 'solid arrow', emphasis: true },
+          {
+            text:
+              ' is a strong link: its two candidates are the only two options left in their cell or unit, so if one is false the other must be true. A ',
+          },
+          { text: 'dashed arrow', emphasis: true },
+          { text: " is a weak link: its two candidates can't both be true." },
         ],
         annotations: intro,
         links,
       },
       {
         text: [
-          { text: 'So any candidate that sees ' },
+          { text: 'Suppose the first end is ' },
+          { text: 'not', emphasis: true },
+          {
+            text: ` ${da}. Follow the arrows: each solid link switches the next candidate on, each dashed link switches the one after off — and the chain finishes by switching the far end on. The same works from the other direction, so `,
+          },
+          { text: 'at least one end of the chain is always true', emphasis: true },
+          { text: '.' },
+        ],
+        annotations: intro,
+        links,
+      },
+      {
+        text: [
+          { text: 'The cells with struck candidates see ' },
           { text: 'both ends', emphasis: true },
-          { text: ' of the chain can be removed.' },
+          {
+            text:
+              ' of the chain. Whichever end turns out to be true, those cells conflict with it — so the struck candidates can be removed.',
+          },
         ],
         annotations: reveal,
         links,

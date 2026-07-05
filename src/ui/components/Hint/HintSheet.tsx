@@ -1,11 +1,11 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
-import type { Hint } from '../../../domain/hints';
+import type { HintPresentation } from '../../../domain/hints';
 import { useTheme } from '../../theme/ThemeProvider';
 
 interface Props {
-  hint: Hint;
+  hint: HintPresentation;
   step: number;
   reduceMotion: boolean;
   onNext: () => void;
@@ -15,16 +15,27 @@ interface Props {
 }
 
 /**
- * The Smart Hint walkthrough sheet: a bottom card that narrates one solving
- * technique step by step. Each step drives the board annotations (passed
- * separately to <Board hintAnnotations>). The last step ends with "Apply".
+ * The Smart Hint walkthrough sheet: a bottom card that discloses one solving
+ * technique progressively — first only the technique ('what'), then its cells
+ * ('where'), then the full teaching walkthrough ('explain'). Each frame drives
+ * the board annotations (passed separately to <Board hintAnnotations>). The
+ * last frame ends with "Apply".
  */
 export function HintSheet({ hint, step, reduceMotion, onNext, onPrev, onApply, onClose }: Props) {
   const theme = useTheme();
   const c = theme.colors;
 
-  const isLast = step >= hint.steps.length - 1;
-  const current = hint.steps[step];
+  const isLast = step >= hint.frames.length - 1;
+  const current = hint.frames[step];
+
+  const primary =
+    current.stage === 'what'
+      ? { label: 'Show me where', a11y: 'Show where on the board', onPress: onNext }
+      : current.stage === 'where'
+        ? { label: 'Explain how', a11y: 'Explain the technique', onPress: onNext }
+        : isLast
+          ? { label: 'Apply', a11y: 'Apply this move', onPress: onApply }
+          : { label: 'Next', a11y: 'Next step', onPress: onNext };
 
   return (
     <Animated.View
@@ -55,18 +66,23 @@ export function HintSheet({ hint, step, reduceMotion, onNext, onPrev, onApply, o
         ))}
       </Text>
 
-      <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no">
-        {hint.steps.map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              { backgroundColor: i === step ? c.primary : c.gridLine },
-              i === step && styles.dotActive,
-            ]}
-          />
-        ))}
-      </View>
+      {current.stage === 'explain' && (
+        <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no">
+          {hint.frames.slice(hint.firstExplainIndex).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    i === step - hint.firstExplainIndex ? c.primary : c.gridLine,
+                },
+                i === step - hint.firstExplainIndex && styles.dotActive,
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
       <View style={styles.footer}>
         {step > 0 && (
@@ -80,12 +96,12 @@ export function HintSheet({ hint, step, reduceMotion, onNext, onPrev, onApply, o
           </Pressable>
         )}
         <Pressable
-          onPress={isLast ? onApply : onNext}
+          onPress={primary.onPress}
           style={[styles.primary, { backgroundColor: c.primary }]}
           accessibilityRole="button"
-          accessibilityLabel={isLast ? 'Apply this move' : 'Next step'}
+          accessibilityLabel={primary.a11y}
         >
-          <Text style={styles.primaryText}>{isLast ? 'Apply' : 'Next'}</Text>
+          <Text style={styles.primaryText}>{primary.label}</Text>
         </Pressable>
       </View>
     </Animated.View>

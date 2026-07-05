@@ -8,6 +8,7 @@
 import { getPeers } from '../rules';
 import type { Board, CellIndex, Digit } from '../types';
 import { ALL_UNITS, combinations } from './units';
+import { formatDigits } from './text';
 import type { Hint, CellAnnotation } from './types';
 
 interface Als {
@@ -61,19 +62,33 @@ export function detectAlsXz(
             steps: [
               {
                 text: [
-                  { text: 'Two ' },
-                  { text: 'Almost Locked Sets', emphasis: true },
-                  { text: ' share the restricted digit ' },
-                  { text: String(x), emphasis: true },
-                  { text: ' (only one set can use it).' },
+                  { text: 'Each highlighted group is an ' },
+                  { text: 'Almost Locked Set', emphasis: true },
+                  {
+                    text: `: one more candidate digit than cells. The darker group shares ${formatDigits([...A.digits].sort((a, b) => a - b))}; the lighter one shares ${formatDigits([...B.digits].sort((a, b) => a - b))}. Knock any one digit out of a group and the remaining digits lock into its cells.`,
+                  },
                 ],
                 annotations: intro,
               },
               {
                 text: [
-                  { text: 'That links the sets, so their other shared digit ' },
+                  { text: 'Both groups want ' },
+                  { text: String(x), emphasis: true },
+                  {
+                    text: ` — but every ${x} in one group sees every ${x} in the other, so `,
+                  },
+                  { text: 'only one group can use it', emphasis: true },
+                  { text: `. The other group loses ${x} and locks immediately.` },
+                ],
+                annotations: intro,
+              },
+              {
+                text: [
+                  { text: 'Whichever group locks must keep its ' },
                   { text: String(z), emphasis: true },
-                  { text: ' can be removed from any cell seeing all of its copies in both sets.' },
+                  {
+                    text: `. So ${z} is certainly placed in one group or the other — and the struck cells, which see every ${z} of both groups, can never hold it.`,
+                  },
                 ],
                 annotations: reveal,
               },

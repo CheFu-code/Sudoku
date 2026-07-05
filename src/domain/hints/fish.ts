@@ -51,6 +51,13 @@ const ORIENTATIONS: Orientation[] = [
 
 const plural = (kind: 'row' | 'column') => (kind === 'row' ? 'rows' : 'columns');
 
+/** Format 1-based line numbers as "2, 5 and 8". */
+function listNumbers(nums: number[]): string {
+  const s = [...nums].sort((a, b) => a - b).map(String);
+  if (s.length <= 1) return s.join('');
+  return `${s.slice(0, -1).join(', ')} and ${s[s.length - 1]}`;
+}
+
 export function detectFish(
   board: Board,
   candidates: Map<CellIndex, Set<Digit>>,
@@ -89,6 +96,8 @@ export function detectFish(
 
         const { id, title } = META[size];
         const corners = combo.flatMap((bl) => bl.cells);
+        const baseList = listNumbers(combo.map((bl) => bl.n + 1));
+        const coverList = listNumbers([...coverSet].map((n) => n + 1));
 
         const intro: Record<CellIndex, CellAnnotation> = {};
         for (const bl of combo) for (const cell of orient.lineCells(bl.n)) intro[cell] = { tint: 'unit' };
@@ -104,21 +113,33 @@ export function detectFish(
           steps: [
             {
               text: [
-                { text: 'The digit ' },
+                { text: 'Focus on the digit ' },
                 { text: String(digit), emphasis: true },
-                { text: ` appears in only ${size} ${plural(orient.cover)} across these ${size} ` },
-                { text: `${plural(orient.base)}`, emphasis: true },
-                { text: ` (the highlighted cells) — an ${title}.` },
+                { text: ` in ${plural(orient.base)} ` },
+                { text: baseList, emphasis: true },
+                { text: `. In each of them, ${digit} can only go in the marked cells — and every one of those cells falls in the same ${size} ${plural(orient.cover)} (` },
+                { text: coverList, emphasis: true },
+                { text: `). That grid of positions is a${title === 'X-Wing' ? 'n' : ''} ${title}.` },
               ],
               annotations: intro,
             },
             {
               text: [
-                { text: 'So ' },
+                { text: `Each of the ${size} ${plural(orient.base)} must place ` },
                 { text: String(digit), emphasis: true },
-                { text: ` must use those ${plural(orient.cover)} inside the ${plural(orient.base)}, and can be removed from the rest of those ` },
-                { text: `${plural(orient.cover)}`, emphasis: true },
-                { text: '.' },
+                { text: ` once, and no two of them can use the same ${orient.cover} — so between them they claim ` },
+                { text: `all ${size} ${plural(orient.cover)}`, emphasis: true },
+                { text: `: every one of ${plural(orient.cover)} ${coverList} gets its ${digit} at one of the marked cells.` },
+              ],
+              annotations: intro,
+            },
+            {
+              text: [
+                { text: `That means no other cell in ${plural(orient.cover)} ` },
+                { text: coverList, emphasis: true },
+                { text: ' can ever hold ' },
+                { text: String(digit), emphasis: true },
+                { text: ' — the struck candidates are removed.' },
               ],
               annotations: reveal,
             },

@@ -63,23 +63,35 @@ export function detectWWing(
             steps: [
               {
                 text: [
-                  { text: 'Two cells share the pair ' },
+                  { text: 'Two separate cells hold the exact same pair ' },
                   { text: `${x} / ${y}`, emphasis: true },
-                  { text: ', joined by a strong link on ' },
+                  { text: '. The two darker cells connect them: in their unit, ' },
                   { text: String(link), emphasis: true },
-                  { text: ' (the other two highlighted cells).' },
+                  { text: ' fits only in those two cells — a ' },
+                  { text: 'strong link', emphasis: true },
+                  { text: `, so one of them MUST be ${link}.` },
                 ],
                 annotations: intro,
               },
               {
                 text: [
-                  { text: 'They can never both be ' },
+                  { text: 'Each end of the link sees one pair cell. Whichever end is ' },
+                  { text: String(link), emphasis: true },
+                  { text: `, its neighbouring pair cell can't also be ${link} and is forced to ` },
                   { text: String(elimDigit), emphasis: true },
-                  { text: ', so ' },
+                  { text: '. So at least one of the two pair cells is certainly ' },
                   { text: String(elimDigit), emphasis: true },
-                  { text: ' can be removed from any cell seeing ' },
-                  { text: 'both pair cells', emphasis: true },
                   { text: '.' },
+                ],
+                annotations: intro,
+              },
+              {
+                text: [
+                  { text: 'A cell that sees ' },
+                  { text: 'both pair cells', emphasis: true },
+                  { text: ' can therefore never hold ' },
+                  { text: String(elimDigit), emphasis: true },
+                  { text: ' — the struck candidates are removed.' },
                 ],
                 annotations: reveal,
               },
