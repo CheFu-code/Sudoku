@@ -13,6 +13,7 @@ EAS  ?= npx eas-cli
         prebuild prebuild-clean \
         test test-watch typecheck lint check \
         build-dev build-preview build-prod submit release \
+        build-ios submit-ios publish-ios \
         build-icons build-puzzles \
         clean
 
@@ -109,11 +110,28 @@ build-prod:
 submit:
 	$(EAS) submit --profile production
 
-## release: Tag VERSION and push it to trigger the CI release pipeline. Usage: make release VERSION=1.2.0
+## release: Tag VERSION and push it (git only, no build). Usage: make release VERSION=1.2.0
 release:
 	@test -n "$(VERSION)" || { echo "Usage: make release VERSION=1.2.0"; exit 1; }
 	git tag v$(VERSION)
 	git push origin v$(VERSION)
+
+# --- Manual iOS release (build/submit from the laptop, not CI) --------------
+
+## build-ios: EAS production build for iOS (cloud build, triggered locally).
+build-ios:
+	$(EAS) build --platform ios --profile production
+
+## submit-ios: Submit the latest iOS production build to App Store Connect.
+submit-ios:
+	$(EAS) submit --platform ios --profile production --latest
+
+## publish-ios: Sync version from VERSION, then EAS-build & auto-submit iOS. Usage: make publish-ios VERSION=1.2.0
+publish-ios:
+	@test -n "$(VERSION)" || { echo "Usage: make publish-ios VERSION=1.2.0"; exit 1; }
+	npm run set-version v$(VERSION)
+	$(EAS) build --platform ios --profile production --auto-submit
+	git checkout -- app.json app.config.ts 2>/dev/null || true   # discard the local version bump; the tag is the source of truth
 
 # --- Assets (offline, dev-time) ---------------------------------------------
 

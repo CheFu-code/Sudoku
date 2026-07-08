@@ -36,21 +36,37 @@ npm run ios       # or: npm run android  (runs expo prebuild + native build)
 npm test
 ```
 
-## Releasing
+## Releasing (manual, iOS)
 
-Pushing a `v*` tag triggers CI (`.github/workflows/release.yml`): it typechecks
-and tests, then runs `eas build` + `eas submit` for iOS. App Store Connect is set
-to auto-publish once the build clears review.
+Publishing is done manually from the laptop so long EAS builds don't burn GitHub
+Actions free-tier minutes. The git tag is still the source of truth for the
+marketing version — **tag first, then build**.
 
 ```bash
-make release VERSION=1.2.0        # tags v1.2.0 and pushes it
+make check                     # optional: typecheck + lint + test
+make release VERSION=1.2.0      # tags v1.2.0 and pushes it (git only — no build triggered)
+make publish-ios VERSION=1.2.0  # set version, EAS-build on the cloud, then auto-submit
 ```
 
-The tag drives the marketing version (written to `app.json` in CI, not committed
-back); EAS auto-increments the build number. Requires the **`EXPO_TOKEN`** repo
-secret. The Android job is written but disabled — enable it by adding the
-`PLAY_SERVICE_ACCOUNT_JSON` secret and setting the `ANDROID_RELEASE_ENABLED` repo
-variable to `true` once Play Console registration is done.
+`make publish-ios` runs `set-version` (writes the version into `app.json`), then
+`eas build --platform ios --profile production --auto-submit`, then restores
+`app.json` so the working tree stays clean — the version bump is never committed
+(the tag is the source of truth). The build runs on EAS's servers (triggered from
+your Mac, so **no GitHub Actions minutes**) and, on success, uploads to App Store
+Connect using `submit.production.ios` in `eas.json`. App Store Connect auto-publishes
+once the build clears review. EAS auto-increments the build number.
+
+First run: EAS prompts to create/reuse signing credentials — answer interactively.
+If it warns about the uncommitted version bump, choose to proceed.
+
+Two-step alternative: `make build-ios` then `make submit-ios`.
+
+CI (`.github/workflows/release.yml`) still exists but now runs **only via manual
+dispatch** (GitHub → Actions → Release → Run workflow, enter the tag). It no longer
+runs on tag push. It needs the **`EXPO_TOKEN`** repo secret. The Android job is
+written but disabled — enable it by adding the `PLAY_SERVICE_ACCOUNT_JSON` secret
+and setting the `ANDROID_RELEASE_ENABLED` repo variable to `true` once Play Console
+registration is done.
 
 ## Puzzles
 

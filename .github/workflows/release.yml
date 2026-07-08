@@ -1,15 +1,19 @@
 name: Release
 
-# Push a version tag to cut a release, e.g.:
-#   git tag v1.2.0 && git push origin v1.2.0
-# The tag drives the app's marketing version; EAS auto-increments the build number.
-# App Store Connect is set to auto-publish once the build finishes review.
+# Manual (workflow_dispatch) release — a fallback for the normal laptop-driven
+# flow (`make publish-ios`), which keeps long EAS builds off GitHub Actions so
+# they don't burn free-tier minutes. To use this: Actions → Release → Run
+# workflow, and enter the version tag (e.g. v1.2.0). This no longer runs on tag
+# push. The tag drives the app's marketing version; EAS auto-increments the build
+# number. App Store Connect is set to auto-publish once the build finishes review.
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to build (e.g. v1.2.0)'
+        required: true
 
-# Don't let two tags race a build/submit for the same platform.
+# Don't let two runs race a build/submit for the same platform.
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -21,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -44,7 +50,7 @@ jobs:
         run: npm test
 
       - name: Sync version from tag
-        run: npm run set-version "$GITHUB_REF_NAME"
+        run: npm run set-version "${{ inputs.tag }}"
 
       - name: Build (iOS, production)
         run: eas build --platform ios --profile production --non-interactive --wait
@@ -63,6 +69,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -86,7 +94,7 @@ jobs:
         run: npm test
 
       - name: Sync version from tag
-        run: npm run set-version "$GITHUB_REF_NAME"
+        run: npm run set-version "${{ inputs.tag }}"
 
       # eas.json references ./play-service-account.json (git-ignored); recreate it here.
       - name: Write Play service account key
