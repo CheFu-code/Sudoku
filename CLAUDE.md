@@ -12,7 +12,7 @@ Cross-platform (iOS + Android) Sudoku game built with **React Native + Expo
 
 ## Identity
 - App name: **Sudoku**
-- Bundle id: **dev.alejandrodelacruz.sudoku**
+- Bundle id: **co.za.chefu.sudoku**
 - Min OS: Expo defaults
 
 ## Tech stack

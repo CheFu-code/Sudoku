@@ -8,14 +8,14 @@
     "scheme": "sudoku",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "dev.alejandrodelacruz.sudoku",
+      "bundleIdentifier": "co.za.chefu.sudoku",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "dev.alejandrodelacruz.sudoku",
+      "package": "co.za.chefu.sudoku",
       "adaptiveIcon": {
         "backgroundColor": "#ECF7FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
