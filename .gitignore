@@ -40,7 +40,6 @@ example
 
 # generated native folders
 /ios
-/android
 
 # EAS Submit — Google Play service account key (secret)
 play-service-account.json
