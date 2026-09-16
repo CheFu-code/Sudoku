@@ -38,6 +38,14 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "sudoku",
+          "organization": "chefu-technologies"
+        }
       ]
     ],
     "experiments": {

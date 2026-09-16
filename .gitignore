@@ -53,3 +53,5 @@ icon.svg
 sudoku-3m.csv
 *.csv
 scripts/bin/
+
+.env.local
