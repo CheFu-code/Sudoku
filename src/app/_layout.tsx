@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@/ui/theme/ThemeProvider';
@@ -23,12 +25,40 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
+SplashScreen.preventAutoHideAsync();
+
 function StatusBarForTheme() {
   const theme = useTheme();
   return <StatusBar style={theme.dark ? 'light' : 'dark'} />;
 }
 
 function RootLayout() {
+  useEffect(() => {
+    let cancelled = false;
+
+    const hide = async () => {
+      try {
+        await SplashScreen.hideAsync();
+      } catch {
+        // The splash screen can remain visible if the app never finished booting.
+        // Fallback below ensures the native splash is not left stuck forever.
+      }
+    };
+
+    void hide();
+
+    const fallback = setTimeout(() => {
+      if (!cancelled) {
+        void hide();
+      }
+    }, 2500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>
