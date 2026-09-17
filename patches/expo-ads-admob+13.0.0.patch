@@ -1,7 +1,7 @@
 diff --git a/node_modules/expo-ads-admob/android/build.gradle b/node_modules/expo-ads-admob/android/build.gradle
 --- a/node_modules/expo-ads-admob/android/build.gradle
 +++ b/node_modules/expo-ads-admob/android/build.gradle
-@@
+@@ -39,4 +39,4 @@
  task androidSourcesJar(type: Jar) {
 -  classifier = 'sources'
 +  archiveClassifier.set('sources')
