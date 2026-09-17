@@ -1,3 +1,10 @@
+jest.mock('react-native-google-mobile-ads', () => ({
+  AdEventType: { CLOSED: 'closed', ERROR: 'error' },
+  RewardedAd: { createForAdRequest: jest.fn(() => ({ loaded: false })) },
+  RewardedAdEventType: { EARNED_REWARD: 'earned_reward', LOADED: 'loaded' },
+  TestIds: { REWARDED: 'test-rewarded-ad' },
+}));
+
 describe('rewarded hint ad config', () => {
   it('uses the production hint ad unit id', () => {
     const { adUnitId } = require('./useRewardedHintAd');

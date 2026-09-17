@@ -63,7 +63,12 @@
       "@sentry/react-native",
       "expo-image",
       "expo-web-browser",
-      "expo-ads-admob"
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-8952058057579255~9162756256"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

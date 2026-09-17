@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AdMobRewarded } from 'expo-ads-admob';
+import {
+  AdEventType,
+  RewardedAd,
+  RewardedAdEventType,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 
 export const adUnitId = 'ca-app-pub-8952058057579255/7704178238';
+
+const rewardedAd = RewardedAd.createForAdRequest(
+  __DEV__ ? TestIds.REWARDED : adUnitId,
+  { requestNonPersonalizedAdsOnly: true },
+);
 
 export function shouldRequireRewardedHint(hintsUsed: number) {
   return hintsUsed >= 1;
@@ -12,72 +22,79 @@ export function useRewardedHintAd() {
   const [loading, setLoading] = useState(false);
   const [rewarded, setRewarded] = useState(false);
   const requestInFlight = useRef(false);
-  const listenerRef = useRef<((event: { type: string }) => void) | null>(null);
+  const rewardEarned = useRef(false);
+  const showResultResolver = useRef<((earned: boolean) => void) | null>(null);
 
-  const load = useCallback(async () => {
-    if (requestInFlight.current) return;
+  const resolveShowResult = useCallback((earned: boolean) => {
+    showResultResolver.current?.(earned);
+    showResultResolver.current = null;
+  }, []);
+
+  const load = useCallback(() => {
+    if (requestInFlight.current || rewardedAd.loaded) return;
     requestInFlight.current = true;
     setLoading(true);
     setRewarded(false);
 
-    try {
-      await AdMobRewarded.setAdUnitID(adUnitId);
-      await AdMobRewarded.requestAdAsync();
-      const isReady = await AdMobRewarded.getIsReadyAsync();
-      setReady(isReady);
-    } catch {
-      setReady(false);
-    } finally {
-      setLoading(false);
-      requestInFlight.current = false;
-    }
+    rewardedAd.load();
   }, []);
 
   const show = useCallback(async () => {
-    if (!ready) {
-      await load();
-    }
-
-    try {
-      const isReady = await AdMobRewarded.getIsReadyAsync();
-      if (!isReady) return false;
-      await AdMobRewarded.showAdAsync();
-      return true;
-    } catch {
+    if (!rewardedAd.loaded) {
+      load();
       return false;
     }
-  }, [load, ready]);
+
+    rewardEarned.current = false;
+    setRewarded(false);
+
+    try {
+      const result = new Promise<boolean>((resolve) => {
+        showResultResolver.current = resolve;
+      });
+      await rewardedAd.show();
+      return result;
+    } catch {
+      resolveShowResult(false);
+      return false;
+    }
+  }, [load, resolveShowResult]);
 
   useEffect(() => {
-    const listener = (event: { type: string }) => {
-      if (event.type === 'rewardedVideoUserDidEarnReward') {
+    const unsubscribeLoaded = rewardedAd.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      requestInFlight.current = false;
+      setLoading(false);
+      setReady(true);
+    });
+    const unsubscribeRewarded = rewardedAd.addAdEventListener(
+      RewardedAdEventType.EARNED_REWARD,
+      () => {
+        rewardEarned.current = true;
         setRewarded(true);
-      }
-      if (event.type === 'rewardedVideoDidLoad') {
-        setReady(true);
-      }
-      if (event.type === 'rewardedVideoDidFailToLoad' || event.type === 'rewardedVideoDidDismiss') {
-        setReady(false);
-      }
-    };
+      },
+    );
+    const unsubscribeError = rewardedAd.addAdEventListener(AdEventType.ERROR, () => {
+      requestInFlight.current = false;
+      setLoading(false);
+      setReady(false);
+      resolveShowResult(false);
+    });
+    const unsubscribeClosed = rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
+      setReady(false);
+      resolveShowResult(rewardEarned.current);
+      load();
+    });
 
-    listenerRef.current = listener;
-    AdMobRewarded.addEventListener('rewardedVideoUserDidEarnReward', listener);
-    AdMobRewarded.addEventListener('rewardedVideoDidLoad', listener);
-    AdMobRewarded.addEventListener('rewardedVideoDidFailToLoad', listener);
-    AdMobRewarded.addEventListener('rewardedVideoDidDismiss', listener);
-
-    void load();
+    load();
 
     return () => {
-      if (listenerRef.current) {
-        AdMobRewarded.removeEventListener('rewardedVideoUserDidEarnReward', listenerRef.current);
-        AdMobRewarded.removeEventListener('rewardedVideoDidLoad', listenerRef.current);
-        AdMobRewarded.removeEventListener('rewardedVideoDidFailToLoad', listenerRef.current);
-        AdMobRewarded.removeEventListener('rewardedVideoDidDismiss', listenerRef.current);
-      }
+      unsubscribeLoaded();
+      unsubscribeRewarded();
+      unsubscribeError();
+      unsubscribeClosed();
+      resolveShowResult(false);
     };
-  }, [load]);
+  }, [load, resolveShowResult]);
 
   return { ready, loading, rewarded, load, show };
 }
