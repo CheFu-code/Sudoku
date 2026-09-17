@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -8,6 +8,7 @@ import { canUndo as historyCanUndo } from '../../domain/history';
 import { useGameStore } from '../../state/gameStore';
 import { useSettingsStore } from '../../state/settingsStore';
 import { computeMistakes, remainingCounts } from '../../state/selectors';
+import { useGameSounds } from '../../hooks/useGameSounds';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { useTheme } from '../theme/ThemeProvider';
@@ -18,12 +19,72 @@ import { GameStats } from '../components/Header/GameStats';
 import { HintSheet } from '../components/Hint/HintSheet';
 import { NumberPad } from '../components/NumberPad/NumberPad';
 
+function ConfettiBurst({ visible }: { visible: boolean }) {
+  const burst = useSharedValue(0);
+
+  useEffect(() => {
+    if (!visible) {
+      burst.value = 0;
+      return;
+    }
+    burst.value = withTiming(1, { duration: 700, easing: Easing.out(Easing.quad) });
+  }, [burst, visible]);
+
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, index) => ({
+        id: index,
+        x: (index % 4) * 32 - 48,
+        y: Math.floor(index / 4) * 20 - 40,
+        rotate: index * 22,
+        color: ['#F7D154', '#7AD7FF', '#9AE89A', '#FF8C7A', '#C8A2FF'][index % 5],
+      })),
+    [],
+  );
+
+  return (
+    <Animated.View pointerEvents="none" style={[styles.confettiWrap, { opacity: burst }]}> 
+      {pieces.map((piece) => (
+        <ConfettiPiece key={piece.id} piece={piece} burst={burst} />
+      ))}
+    </Animated.View>
+  );
+}
+
+function ConfettiPiece({
+  piece,
+  burst,
+}: {
+  piece: { x: number; y: number; rotate: number; color: string };
+  burst: ReturnType<typeof useSharedValue<number>>;
+}) {
+  const style = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: burst.value * piece.x },
+      { translateY: burst.value * piece.y },
+      { rotate: `${piece.rotate + burst.value * 90}deg` },
+    ],
+    opacity: 1 - burst.value * 0.5,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.confettiPiece,
+        { backgroundColor: piece.color, left: '50%', top: '50%' },
+        style,
+      ]}
+    />
+  );
+}
+
 export function GameScreen() {
   const router = useRouter();
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
+  const { play } = useGameSounds();
   useGameTimer();
 
   const s = useGameStore();
@@ -47,18 +108,20 @@ export function GameScreen() {
   useEffect(() => {
     if (s.mistakes > prevMistakes.current) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      void play('error');
     }
     prevMistakes.current = s.mistakes;
-  }, [s.mistakes]);
+  }, [play, s.mistakes]);
 
   // The one earned celebration: a success tap when the puzzle is solved.
   const prevStatus = useRef(s.status);
   useEffect(() => {
     if (s.status === 'won' && prevStatus.current !== 'won') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      void play('success');
     }
     prevStatus.current = s.status;
-  }, [s.status]);
+  }, [play, s.status]);
 
   if (!s.puzzle) {
     // No active game (e.g. deep link) — bounce home.
@@ -130,6 +193,7 @@ export function GameScreen() {
             style={[styles.result, { backgroundColor: c.surface, borderColor: c.gridLine }]}
             accessibilityLiveRegion="polite"
           >
+            {s.status === 'won' && <ConfettiBurst visible={s.status === 'won'} />}
             <Text style={[styles.resultText, { color: c.text }]}>
               {s.status === 'won' ? 'Solved! 🎉' : 'Out of mistakes'}
             </Text>
@@ -229,12 +293,28 @@ const styles = StyleSheet.create({
   },
   bottom: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 10 },
   result: {
+    position: 'relative',
     borderRadius: 16,
     borderWidth: 1,
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 16,
     gap: 16,
+  },
+  confettiWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  confettiPiece: {
+    position: 'absolute',
+    width: 8,
+    height: 16,
+    borderRadius: 4,
+    transformOrigin: 'center',
   },
   resultText: { fontSize: 28, fontWeight: '800' },
   resultActions: { flexDirection: 'row', gap: 12 },

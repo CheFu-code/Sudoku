@@ -7,6 +7,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { useGameSounds } from '../../../hooks/useGameSounds';
 import { DIGITS } from '../../../domain/types';
 import type { Cell as CellModel, CellIndex, Digit } from '../../../domain/types';
 import type { CellAnnotation } from '../../../domain/hints';
@@ -53,6 +55,7 @@ function CellComponent({
 }: Props) {
   const theme = useTheme();
   const c = theme.colors;
+  const { play } = useGameSounds();
 
   const r = rowOf(index);
   const col = colOf(index);
@@ -106,6 +109,21 @@ function CellComponent({
     color: interpolateColor(flash.value, [0, 1], [valueColor, c.error]),
   }));
 
+  const pressScale = useSharedValue(1);
+  useEffect(() => {
+    pressScale.value = withTiming(selected ? 0.98 : 1, { duration: 120 });
+  }, [pressScale, selected]);
+
+  const pressAnim = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
+  }));
+
+  useEffect(() => {
+    if (!selected) return;
+    Haptics.selectionAsync().catch(() => {});
+    void play('tap');
+  }, [play, selected]);
+
   const a11yLabel = buildLabel(r, col, cell, mistake);
 
   // Fixed integer size keeps columns aligned across rows; flex is only the
@@ -134,11 +152,18 @@ function CellComponent({
   return (
     <Pressable
       onPress={() => onPress(index)}
+      onPressIn={() => {
+        pressScale.value = withTiming(0.96, { duration: 80 });
+      }}
+      onPressOut={() => {
+        pressScale.value = withTiming(selected ? 0.98 : 1, { duration: 100 });
+      }}
       style={[styles.cell, sizeStyle, { backgroundColor: background }, borderStyle]}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
       accessibilityState={{ selected, disabled: cell.given }}
     >
+      <Animated.View style={[StyleSheet.absoluteFill, pressAnim, { overflow: 'hidden' }]} />
       {mistake && (
         <View
           style={[styles.errorFlag, { borderTopColor: c.error }]}
