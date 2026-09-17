@@ -123,7 +123,51 @@ const sunset: Theme = {
   },
 };
 
-export const THEMES: Theme[] = [light, dark, forest, sunset];
+const ocean: Theme = {
+  key: 'ocean',
+  name: 'Ocean',
+  dark: true,
+  colors: {
+    background: '#081B2A',
+    surface: '#102A3A',
+    text: '#EAF7FF',
+    textMuted: '#9FB7C9',
+    primary: '#4DB6FF',
+    highlight: '#143D53',
+    sameValue: '#1D5779',
+    selected: '#38A6FF',
+    userValue: '#80D3FF',
+    error: '#FF7A7A',
+    errorBg: '#3B2226',
+    gridLine: '#1E455C',
+    gridLineBold: '#6EA7C8',
+    note: '#B6D7E7',
+  },
+};
+
+const lavender: Theme = {
+  key: 'lavender',
+  name: 'Lavender',
+  dark: false,
+  colors: {
+    background: '#F4F0FF',
+    surface: '#FFFFFF',
+    text: '#241A37',
+    textMuted: '#665C7A',
+    primary: '#7A5CFF',
+    highlight: '#EEE7FF',
+    sameValue: '#DDD2FF',
+    selected: '#7A5CFF',
+    userValue: '#6050D8',
+    error: '#D94D89',
+    errorBg: '#F7DDEB',
+    gridLine: '#DCD3F4',
+    gridLineBold: '#705EA9',
+    note: '#6A5B92',
+  },
+};
+
+export const THEMES: Theme[] = [light, dark, forest, sunset, ocean, lavender];
 
 export const DEFAULT_THEME_KEY = light.key;
 
