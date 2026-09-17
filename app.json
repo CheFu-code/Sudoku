@@ -3,9 +3,7 @@
     "name": "Sudoku",
     "slug": "sudoku",
     "version": "1.0.0",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sudoku",
