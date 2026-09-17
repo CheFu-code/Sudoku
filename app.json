@@ -46,7 +46,10 @@
           "project": "sudoku",
           "organization": "chefu-technologies"
         }
-      ]
+      ],
+      "@sentry/react-native",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
