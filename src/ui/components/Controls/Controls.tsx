@@ -66,6 +66,7 @@ interface Props {
   hintAvailable: boolean;
   /** Hints opened this game (informational badge; hints are unlimited). */
   hintsUsed: number;
+  requireRewardedHint?: boolean;
   loadingHintAd?: boolean;
   onUndo: () => void;
   onErase: () => void;
@@ -81,6 +82,7 @@ export function Controls({
   canUndo,
   hintAvailable,
   hintsUsed,
+  requireRewardedHint = false,
   loadingHintAd = false,
   onUndo,
   onErase,
@@ -120,7 +122,13 @@ export function Controls({
         iconName="lightbulb"
         disabled={!hintAvailable || loadingHintAd}
         countBadge={hintsUsed > 0 ? String(hintsUsed) : undefined}
-        hint={loadingHintAd ? 'Loading rewarded hint ad' : 'Watch a rewarded ad to reveal the next move'}
+        hint={
+          loadingHintAd
+            ? 'Loading rewarded hint ad'
+            : requireRewardedHint
+              ? 'Watch a rewarded ad to reveal the next move'
+              : 'Explain the next move step by step'
+        }
         onPress={onHint}
       />
     </View>

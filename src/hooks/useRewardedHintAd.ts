@@ -3,6 +3,10 @@ import { AdMobRewarded } from 'expo-ads-admob';
 
 export const adUnitId = 'ca-app-pub-8952058057579255/7704178238';
 
+export function shouldRequireRewardedHint(hintsUsed: number) {
+  return hintsUsed >= 1;
+}
+
 export function useRewardedHintAd() {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -3,4 +3,10 @@ describe('rewarded hint ad config', () => {
     const { adUnitId } = require('./useRewardedHintAd');
     expect(adUnitId).toBe('ca-app-pub-8952058057579255/7704178238');
   });
+
+  it('gives one free hint before requiring a rewarded ad', () => {
+    const { shouldRequireRewardedHint } = require('./useRewardedHintAd');
+    expect(shouldRequireRewardedHint(0)).toBe(false);
+    expect(shouldRequireRewardedHint(1)).toBe(true);
+  });
 });
