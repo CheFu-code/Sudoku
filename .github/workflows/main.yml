@@ -1,0 +1,29 @@
+name: Generate Android Keystore
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate keystore
+        run: |
+          keytool -genkeypair \
+            -v \
+            -storetype PKCS12 \
+            -keystore release.keystore \
+            -alias release \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            -dname "CN=CHEFU TECHNOLOGIES, OU=Software, O=CHEFU TECHNOLOGIES, L=Johannesburg, ST=Gauteng, C=ZA"
+
+      - name: Upload keystore
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-keystore
+          path: release.keystore
