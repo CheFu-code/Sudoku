@@ -1,4 +1,10 @@
 {
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-8952058057579255~9162756256",
+    "delay_app_measurement_init": true,
+    "optimize_initialization": true,
+    "optimize_ad_loading": true
+  },
   "expo": {
     "name": "Sudoku",
     "slug": "sudoku",
