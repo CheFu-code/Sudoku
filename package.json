@@ -59,7 +59,8 @@
     "regrade:puzzles": "tsx scripts/regrade-puzzle-bank.ts",
     "test:bank": "BANK_GUARDRAIL=1 jest bankGuardrail",
     "build:icons": "tsx scripts/build-icons.ts",
-    "set-version": "tsx scripts/set-version.ts"
+    "set-version": "tsx scripts/set-version.ts",
+    "prebuild": "expo prebuild"
   },
   "jest": {
     "preset": "jest-expo",
