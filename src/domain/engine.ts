@@ -12,12 +12,12 @@ import { getPeers, isValidPlacement } from './rules';
 import type { Board, Cell, CellIndex, Digit, Move } from './types';
 
 export interface EngineResult {
-  board: Board;
-  move: Move;
+    board: Board;
+    move: Move;
 }
 
 function snapshot(board: Board, indices: CellIndex[]) {
-  return indices.map((index) => ({ index, cell: cloneCell(board[index]) }));
+    return indices.map((index) => ({ index, cell: cloneCell(board[index]) }));
 }
 
 /**
@@ -29,43 +29,43 @@ function snapshot(board: Board, indices: CellIndex[]) {
  * whole thing is one reversible move so a single undo restores the peer notes.
  */
 export function placeValue(
-  board: Board,
-  index: CellIndex,
-  value: Digit,
-  removePeerNotes = false,
+    board: Board,
+    index: CellIndex,
+    value: Digit,
+    removePeerNotes = false,
 ): EngineResult | null {
-  const cell = board[index];
-  if (cell.given) return null;
+    const cell = board[index];
+    if (cell.given) return null;
 
-  const isClear = cell.value === value;
-  const nextCell: Cell = isClear
-    ? { value: null, given: false, notes: new Set() }
-    : { value, given: false, notes: new Set() };
+    const isClear = cell.value === value;
+    const nextCell: Cell = isClear
+        ? { value: null, given: false, notes: new Set() }
+        : { value, given: false, notes: new Set() };
 
-  // No change (e.g. clearing an already-empty cell).
-  if (cell.value === nextCell.value && cell.notes.size === nextCell.notes.size) {
-    return null;
-  }
+    // No change (e.g. clearing an already-empty cell).
+    if (cell.value === nextCell.value && cell.notes.size === nextCell.notes.size) {
+        return null;
+    }
 
-  // Peers that still pencil this value can no longer hold it once placed.
-  const peerCleanup =
-    removePeerNotes && !isClear
-      ? [...getPeers(index)].filter((p) => board[p].notes.has(value))
-      : [];
+    // Peers that still pencil this value can no longer hold it once placed.
+    const peerCleanup =
+        removePeerNotes && !isClear
+            ? [...getPeers(index)].filter((p) => board[p].notes.has(value))
+            : [];
 
-  const affected = [index, ...peerCleanup];
-  const before = snapshot(board, affected);
+    const affected = [index, ...peerCleanup];
+    const before = snapshot(board, affected);
 
-  const nextBoard = board.slice();
-  nextBoard[index] = nextCell;
-  for (const p of peerCleanup) {
-    const notes = new Set(nextBoard[p].notes);
-    notes.delete(value);
-    nextBoard[p] = { ...nextBoard[p], notes };
-  }
+    const nextBoard = board.slice();
+    nextBoard[index] = nextCell;
+    for (const p of peerCleanup) {
+        const notes = new Set(nextBoard[p].notes);
+        notes.delete(value);
+        nextBoard[p] = { ...nextBoard[p], notes };
+    }
 
-  const after = snapshot(nextBoard, affected);
-  return { board: nextBoard, move: { type: 'place', before, after } };
+    const after = snapshot(nextBoard, affected);
+    return { board: nextBoard, move: { type: 'place', before, after } };
 }
 
 /**
@@ -73,42 +73,42 @@ export function placeValue(
  * true, refuses to add a note whose value already appears in a peer.
  */
 export function toggleNote(
-  board: Board,
-  index: CellIndex,
-  value: Digit,
-  validate = true,
+    board: Board,
+    index: CellIndex,
+    value: Digit,
+    validate = true,
 ): EngineResult | null {
-  const cell = board[index];
-  if (cell.given || cell.value !== null) return null;
+    const cell = board[index];
+    if (cell.given || cell.value !== null) return null;
 
-  const has = cell.notes.has(value);
-  // Only block *adding* an illegal note; removing is always allowed.
-  if (!has && validate && !isValidPlacement(board, index, value)) return null;
+    const has = cell.notes.has(value);
+    // Only block *adding* an illegal note; removing is always allowed.
+    if (!has && validate && !isValidPlacement(board, index, value)) return null;
 
-  const before = snapshot(board, [index]);
-  const notes = new Set(cell.notes);
-  if (has) notes.delete(value);
-  else notes.add(value);
+    const before = snapshot(board, [index]);
+    const notes = new Set(cell.notes);
+    if (has) notes.delete(value);
+    else notes.add(value);
 
-  const nextBoard = withCell(board, index, { ...cell, notes });
-  const after = snapshot(nextBoard, [index]);
-  return { board: nextBoard, move: { type: 'note', before, after } };
+    const nextBoard = withCell(board, index, { ...cell, notes });
+    const after = snapshot(nextBoard, [index]);
+    return { board: nextBoard, move: { type: 'note', before, after } };
 }
 
 /** Clear a cell's value and notes. No-op on givens or already-empty cells. */
 export function eraseCell(board: Board, index: CellIndex): EngineResult | null {
-  const cell = board[index];
-  if (cell.given) return null;
-  if (cell.value === null && cell.notes.size === 0) return null;
+    const cell = board[index];
+    if (cell.given) return null;
+    if (cell.value === null && cell.notes.size === 0) return null;
 
-  const before = snapshot(board, [index]);
-  const nextBoard = withCell(board, index, {
-    value: null,
-    given: false,
-    notes: new Set(),
-  });
-  const after = snapshot(nextBoard, [index]);
-  return { board: nextBoard, move: { type: 'erase', before, after } };
+    const before = snapshot(board, [index]);
+    const nextBoard = withCell(board, index, {
+        value: null,
+        given: false,
+        notes: new Set(),
+    });
+    const after = snapshot(nextBoard, [index]);
+    return { board: nextBoard, move: { type: 'erase', before, after } };
 }
 
 /**
@@ -116,18 +116,18 @@ export function eraseCell(board: Board, index: CellIndex): EngineResult | null {
  * as a single batched, undoable move.
  */
 export function applyAutoNotes(board: Board): EngineResult | null {
-  const candidates = allCandidates(board);
-  const indices = [...candidates.keys()];
-  if (indices.length === 0) return null;
+    const candidates = allCandidates(board);
+    const indices = [...candidates.keys()];
+    if (indices.length === 0) return null;
 
-  const before = snapshot(board, indices);
-  let nextBoard = board.slice();
-  for (const index of indices) {
-    const notes = candidates.get(index)!;
-    nextBoard[index] = { ...nextBoard[index], notes };
-  }
-  const after = snapshot(nextBoard, indices);
-  return { board: nextBoard, move: { type: 'autoNotes', before, after } };
+    const before = snapshot(board, indices);
+    let nextBoard = board.slice();
+    for (const index of indices) {
+        const notes = candidates.get(index)!;
+        nextBoard[index] = { ...nextBoard[index], notes };
+    }
+    const after = snapshot(nextBoard, indices);
+    return { board: nextBoard, move: { type: 'autoNotes', before, after } };
 }
 
 /**
@@ -141,57 +141,57 @@ export function applyAutoNotes(board: Board): EngineResult | null {
  * are seeded, never the whole board, and it all stays one undoable move.
  */
 export function applyEliminations(
-  board: Board,
-  eliminations: { index: CellIndex; digit: Digit }[],
-  seedEmptyTargets = false,
+    board: Board,
+    eliminations: { index: CellIndex; digit: Digit }[],
+    seedEmptyTargets = false,
 ): EngineResult | null {
-  // Cells to seed with their legal candidates before striking.
-  const seed = new Set<CellIndex>();
-  // Group the digits to strip per cell, keeping only ones currently noted
-  // (or about to be seeded).
-  const perCell = new Map<CellIndex, Set<Digit>>();
-  for (const { index, digit } of eliminations) {
-    const cell = board[index];
-    const seeding =
-      seedEmptyTargets && cell.value === null && cell.notes.size === 0;
-    if (seeding) seed.add(index);
-    if (cell.notes.has(digit) || seeding) {
-      (perCell.get(index) ?? perCell.set(index, new Set()).get(index)!).add(digit);
+    // Cells to seed with their legal candidates before striking.
+    const seed = new Set<CellIndex>();
+    // Group the digits to strip per cell, keeping only ones currently noted
+    // (or about to be seeded).
+    const perCell = new Map<CellIndex, Set<Digit>>();
+    for (const { index, digit } of eliminations) {
+        const cell = board[index];
+        const seeding =
+            seedEmptyTargets && cell.value === null && cell.notes.size === 0;
+        if (seeding) seed.add(index);
+        if (cell.notes.has(digit) || seeding) {
+            (perCell.get(index) ?? perCell.set(index, new Set()).get(index)!).add(digit);
+        }
     }
-  }
-  const indices = [...perCell.keys()];
-  if (indices.length === 0) return null;
+    const indices = [...perCell.keys()];
+    if (indices.length === 0) return null;
 
-  const before = snapshot(board, indices);
-  const nextBoard = board.slice();
-  for (const index of indices) {
-    const notes = seed.has(index)
-      ? new Set(candidatesFor(board, index))
-      : new Set(nextBoard[index].notes);
-    for (const d of perCell.get(index)!) notes.delete(d);
-    nextBoard[index] = { ...nextBoard[index], notes };
-  }
-  const after = snapshot(nextBoard, indices);
-  return { board: nextBoard, move: { type: 'note', before, after } };
+    const before = snapshot(board, indices);
+    const nextBoard = board.slice();
+    for (const index of indices) {
+        const notes = seed.has(index)
+            ? new Set(candidatesFor(board, index))
+            : new Set(nextBoard[index].notes);
+        for (const d of perCell.get(index)!) notes.delete(d);
+        nextBoard[index] = { ...nextBoard[index], notes };
+    }
+    const after = snapshot(nextBoard, indices);
+    return { board: nextBoard, move: { type: 'note', before, after } };
 }
 
 /** Apply a move's "before" snapshots — used by the history/undo system. */
 export function applySnapshots(
-  board: Board,
-  snapshots: { index: CellIndex; cell: Cell }[],
+    board: Board,
+    snapshots: { index: CellIndex; cell: Cell }[],
 ): Board {
-  let next = board.slice();
-  for (const { index, cell } of snapshots) {
-    next[index] = cloneCell(cell);
-  }
-  return next;
+    let next = board.slice();
+    for (const { index, cell } of snapshots) {
+        next[index] = cloneCell(cell);
+    }
+    return next;
 }
 
 /** The board matches the puzzle's solution. */
 export function isSolved(board: Board, solution: string): boolean {
-  for (let i = 0; i < board.length; i++) {
-    if (board[i].value === null) return false;
-    if (String(board[i].value) !== solution[i]) return false;
-  }
-  return true;
+    for (let i = 0; i < board.length; i++) {
+        if (board[i].value === null) return false;
+        if (String(board[i].value) !== solution[i]) return false;
+    }
+    return true;
 }
