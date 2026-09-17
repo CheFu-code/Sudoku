@@ -3,6 +3,9 @@
     "name": "Sudoku",
     "slug": "sudoku",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sudoku",
@@ -11,11 +14,20 @@
       "bundleIdentifier": "co.za.chefu.sudoku",
       "supportsTablet": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
+          }
+        ]
       }
     },
     "android": {
       "package": "co.za.chefu.sudoku",
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-8952058057579255~9162756256"
+      },
       "adaptiveIcon": {
         "backgroundColor": "#ECF7FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -49,18 +61,24 @@
       ],
       "@sentry/react-native",
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-ads-admob"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 3000,
+      "url": "https://u.expo.dev/894b07cd-634e-48b8-a831-95afa83deffc"
+    },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "894b07cd-634e-48b8-a831-95afa83deffc"
+        "projectId": "8b0b9f9c-5d4c-4207-98d4-00dd4042b400"
       }
-    },
-    "owner": "acrulopez"
+    }
   }
 }
