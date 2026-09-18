@@ -66,8 +66,6 @@ interface Props {
   hintAvailable: boolean;
   /** Hints opened this game (informational badge; hints are unlimited). */
   hintsUsed: number;
-  requireRewardedHint?: boolean;
-  loadingHintAd?: boolean;
   onUndo: () => void;
   onErase: () => void;
   onFastPencil: () => void;
@@ -82,8 +80,6 @@ export function Controls({
   canUndo,
   hintAvailable,
   hintsUsed,
-  requireRewardedHint = false,
-  loadingHintAd = false,
   onUndo,
   onErase,
   onFastPencil,
@@ -118,17 +114,11 @@ export function Controls({
         onPress={onToggleFastMode}
       />
       <Tool
-        label={loadingHintAd ? 'Loading…' : 'Hint'}
+        label="Hint"
         iconName="lightbulb"
-        disabled={!hintAvailable || loadingHintAd}
+        disabled={!hintAvailable}
         countBadge={hintsUsed > 0 ? String(hintsUsed) : undefined}
-        hint={
-          loadingHintAd
-            ? 'Loading rewarded hint ad'
-            : requireRewardedHint
-              ? 'Watch a rewarded ad to reveal the next move'
-              : 'Explain the next move step by step'
-        }
+        hint="Explain the next move step by step"
         onPress={onHint}
       />
     </View>

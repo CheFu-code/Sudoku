@@ -6,7 +6,6 @@
     "@expo/ui": "~57.0.18",
     "@sentry/react-native": "~7.11.0",
     "expo": "^57.0.0",
-    "expo-ads-admob": "^13.0.0",
     "expo-av": "^16.0.8",
     "expo-constants": "~57.0.18",
     "expo-device": "~57.0.2",

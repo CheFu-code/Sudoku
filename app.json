@@ -12,23 +12,11 @@
       "bundleIdentifier": "co.za.chefu.sudoku",
       "supportsTablet": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
-        "SKAdNetworkItems": [
-          {
-            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
-          },
-          {
-            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
-          }
-        ]
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "co.za.chefu.sudoku",
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-8952058057579255~9162756256"
-      },
       "adaptiveIcon": {
         "backgroundColor": "#ECF7FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -62,8 +50,7 @@
       ],
       "@sentry/react-native",
       "expo-image",
-      "expo-web-browser",
-      "expo-ads-admob"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -18,7 +18,6 @@ import { GameHeader } from '../components/Header/GameHeader';
 import { GameStats } from '../components/Header/GameStats';
 import { HintSheet } from '../components/Hint/HintSheet';
 import { NumberPad } from '../components/NumberPad/NumberPad';
-import { shouldRequireRewardedHint, useRewardedHintAd } from '../../hooks/useRewardedHintAd';
 
 function ConfettiBurst({ visible }: { visible: boolean }) {
   const burst = useSharedValue(0);
@@ -90,8 +89,6 @@ export function GameScreen() {
 
   const s = useGameStore();
   const maxMistakes = useSettingsStore((st) => st.maxMistakes);
-  const { ready: rewardedAdReady, loading: rewardedAdLoading, show: showRewardedHintAd } = useRewardedHintAd();
-  const requireRewardedHint = shouldRequireRewardedHint(s.hintsUsed);
 
   const mistakes = useMemo(
     () => computeMistakes(s.board, s.puzzle?.solution ?? ''),
@@ -143,28 +140,9 @@ export function GameScreen() {
   const activeValue =
     s.selectedDigit ?? (s.selectedIndex !== null ? s.board[s.selectedIndex].value : null);
 
-  const handleHintPress = async () => {
+  const handleHintPress = () => {
     if (s.hint) return;
-
-    if (!requireRewardedHint) {
-      s.requestHint();
-      return;
-    }
-
-    if (rewardedAdReady) {
-      const rewarded = await showRewardedHintAd();
-      if (rewarded) {
-        s.requestHint();
-      }
-      return;
-    }
-
-    if (!rewardedAdLoading) {
-      const rewarded = await showRewardedHintAd();
-      if (rewarded) {
-        s.requestHint();
-      }
-    }
+    s.requestHint();
   };
 
   return (
@@ -263,8 +241,6 @@ export function GameScreen() {
               canUndo={historyCanUndo(s.history)}
               hintAvailable={hintAvailable && !s.hint}
               hintsUsed={s.hintsUsed}
-              requireRewardedHint={requireRewardedHint}
-              loadingHintAd={rewardedAdLoading}
               onUndo={s.undo}
               onErase={s.erase}
               onFastPencil={s.fastPencil}
