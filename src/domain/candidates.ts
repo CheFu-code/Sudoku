@@ -1,12 +1,7 @@
-/**
- * Candidate (pencil-mark) computation.
- */
-
 import { DIGITS } from './types';
 import type { Board, CellIndex, Digit } from './types';
 import { PEERS } from './rules';
 
-/** Legal candidates for a single empty cell. Returns [] for filled cells. */
 export function candidatesFor(board: Board, index: CellIndex): Digit[] {
   if (board[index].value !== null) return [];
   const used = new Set<Digit>();

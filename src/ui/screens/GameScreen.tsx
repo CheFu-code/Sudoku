@@ -8,7 +8,7 @@ import { canUndo as historyCanUndo } from '../../domain/history';
 import { useGameStore } from '../../state/gameStore';
 import { useSettingsStore } from '../../state/settingsStore';
 import { computeMistakes, remainingCounts } from '../../state/selectors';
-import { useGameSounds } from '../../hooks/useGameSounds';
+// import { useGameSounds } from '../../hooks/useGameSounds';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 import { useTheme } from '../theme/ThemeProvider';
@@ -84,7 +84,7 @@ export function GameScreen() {
   const c = theme.colors;
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
-  const { play } = useGameSounds();
+  // const { play } = useGameSounds();
   useGameTimer();
 
   const s = useGameStore();
@@ -105,23 +105,23 @@ export function GameScreen() {
 
   // Vibrate when the mistake count climbs (a wrong value was just placed).
   const prevMistakes = useRef(s.mistakes);
-  useEffect(() => {
-    if (s.mistakes > prevMistakes.current) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-      void play('error');
-    }
-    prevMistakes.current = s.mistakes;
-  }, [play, s.mistakes]);
+  // useEffect(() => {
+  //   if (s.mistakes > prevMistakes.current) {
+  //     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+  //     void play('error');
+  //   }
+  //   prevMistakes.current = s.mistakes;
+  // }, [play, s.mistakes]);
 
   // The one earned celebration: a success tap when the puzzle is solved.
-  const prevStatus = useRef(s.status);
-  useEffect(() => {
-    if (s.status === 'won' && prevStatus.current !== 'won') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      void play('success');
-    }
-    prevStatus.current = s.status;
-  }, [play, s.status]);
+  // const prevStatus = useRef(s.status);
+  // useEffect(() => {
+  //   if (s.status === 'won' && prevStatus.current !== 'won') {
+  //     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  //     void play('success');
+  //   }
+  //   prevStatus.current = s.status;
+  // }, [play, s.status]);
 
   if (!s.puzzle) {
     // No active game (e.g. deep link) — bounce home.

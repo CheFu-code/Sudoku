@@ -73,3 +73,9 @@ export interface Move {
   /** Snapshots of cells *after* the move (for redo). */
   after: { index: CellIndex; cell: Cell }[];
 }
+
+
+export interface EngineResult {
+    board: Board;
+    move: Move;
+}

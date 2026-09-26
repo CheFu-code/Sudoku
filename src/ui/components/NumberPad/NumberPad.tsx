@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useGameSounds } from '../../../hooks/useGameSounds';
+// import { useGameSounds } from '../../../hooks/useGameSounds';
 import { DIGITS } from '../../../domain/types';
 import type { Digit } from '../../../domain/types';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -26,7 +26,7 @@ interface Props {
 export function NumberPad({ remaining, activeDigit, invalidFlash, reduceMotion, onPress }: Props) {
   const theme = useTheme();
   const c = theme.colors;
-  const { play } = useGameSounds();
+  // const { play } = useGameSounds();
 
   // Haptic feedback fires once per rejected attempt.
   useEffect(() => {
@@ -47,7 +47,7 @@ export function NumberPad({ remaining, activeDigit, invalidFlash, reduceMotion, 
             disabled={done}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
-              void play('tap');
+              // void play('tap');
               onPress(d);
             }}
             style={[

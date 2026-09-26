@@ -1,8 +1,3 @@
-/**
- * Color palettes for the app. The theme palette feature lets the player pick
- * one; the selected key is persisted in the settings store.
- */
-
 export interface Theme {
   key: string;
   name: string;
@@ -167,10 +162,74 @@ const lavender: Theme = {
   },
 };
 
-export const THEMES: Theme[] = [light, dark, forest, sunset, ocean, lavender];
+const rose: Theme = {
+  key: 'rose',
+  name: 'Rose',
+  dark: false,
+  colors: {
+    background: '#FFF1F4',
+    surface: '#FFFFFF',
+    text: '#3A1522',
+    textMuted: '#8A6672',
+    primary: '#E23F6E',
+    highlight: '#FCE3EA',
+    sameValue: '#F8C9D8',
+    selected: '#E23F6E',
+    userValue: '#C22F5C',
+    error: '#D64545',
+    errorBg: '#FBDCDC',
+    gridLine: '#F0D6DE',
+    gridLineBold: '#B98A9B',
+    note: '#8C6A78',
+  },
+};
 
+const graphite: Theme = {
+  key: 'graphite',
+  name: 'Graphite',
+  dark: true,
+  colors: {
+    background: '#121214',
+    surface: '#1C1C1F',
+    text: '#EDEDEF',
+    textMuted: '#8E8E93',
+    primary: '#8CA0B3',
+    highlight: '#242428',
+    sameValue: '#2D3238',
+    selected: '#5C6E80',
+    userValue: '#B9C7D4',
+    error: '#FF6B6B',
+    errorBg: '#3A2323',
+    gridLine: '#2A2A2D',
+    gridLineBold: '#48484C',
+    note: '#8E8E93',
+  },
+};
+
+const ember: Theme = {
+  key: 'ember',
+  name: 'Ember',
+  dark: true,
+  colors: {
+    background: '#1A1210',
+    surface: '#241A17',
+    text: '#F5E9E4',
+    textMuted: '#A68F86',
+    primary: '#FF6B3D',
+    highlight: '#3A2620',
+    sameValue: '#4A2E24',
+    selected: '#E8562A',
+    userValue: '#FF9466',
+    error: '#FF4D4D',
+    errorBg: '#3D2320',
+    gridLine: '#33241F',
+    gridLineBold: '#5C4038',
+    note: '#B58A78',
+  },
+};
+
+export const THEMES: Theme[] = [light, dark, forest, sunset, ocean, lavender, rose, graphite, ember];
 export const DEFAULT_THEME_KEY = light.key;
-
 export function getTheme(key: string): Theme {
   return THEMES.find((t) => t.key === key) ?? light;
 }

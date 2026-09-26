@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useGameSounds } from '../../../hooks/useGameSounds';
+// import { useGameSounds } from '../../../hooks/useGameSounds';
 import { DIGITS } from '../../../domain/types';
 import type { Cell as CellModel, CellIndex, Digit } from '../../../domain/types';
 import type { CellAnnotation } from '../../../domain/hints';
@@ -55,7 +55,7 @@ function CellComponent({
 }: Props) {
   const theme = useTheme();
   const c = theme.colors;
-  const { play } = useGameSounds();
+  // const { play } = useGameSounds();
 
   const r = rowOf(index);
   const col = colOf(index);
@@ -118,11 +118,11 @@ function CellComponent({
     transform: [{ scale: pressScale.value }],
   }));
 
-  useEffect(() => {
-    if (!selected) return;
-    Haptics.selectionAsync().catch(() => {});
-    void play('tap');
-  }, [play, selected]);
+  // useEffect(() => {
+  //   if (!selected) return;
+  //   Haptics.selectionAsync().catch(() => {});
+  //   void play('tap');
+  // }, [play, selected]);
 
   const a11yLabel = buildLabel(r, col, cell, mistake);
 

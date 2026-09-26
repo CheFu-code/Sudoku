@@ -1,14 +1,7 @@
-/**
- * Sudoku rules: peer relationships, placement validity, conflict detection.
- */
-
 import { boxOf, colOf, rowOf, SIDE } from './board';
 import type { Board, CellIndex, Digit } from './types';
 
-/**
- * Precomputed peer sets: for each cell, the 20 other cells sharing its row,
- * column, or box. Built once at module load.
- */
+
 export const PEERS: readonly ReadonlySet<CellIndex>[] = buildPeers();
 
 function buildPeers(): Set<CellIndex>[] {
@@ -31,10 +24,6 @@ export function getPeers(index: CellIndex): ReadonlySet<CellIndex> {
   return PEERS[index];
 }
 
-/**
- * Whether `value` can legally be placed at `index` given the current board —
- * i.e. no peer already holds that value. Ignores the cell's own current value.
- */
 export function isValidPlacement(
   board: Board,
   index: CellIndex,
@@ -46,10 +35,6 @@ export function isValidPlacement(
   return true;
 }
 
-/**
- * Indices of all cells that conflict with another cell (same value in a peer).
- * Used to highlight mistakes.
- */
 export function getConflicts(board: Board): Set<CellIndex> {
   const conflicts = new Set<CellIndex>();
   for (let i = 0; i < board.length; i++) {

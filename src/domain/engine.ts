@@ -1,33 +1,14 @@
-/**
- * The game engine: pure transformations of the board. Each mutating function
- * returns the new board plus a reversible `Move`, or `null` if the action is a
- * no-op or rejected (e.g. editing a given, or an invalid validated note).
- *
- * No framework or storage imports — this module is fully unit-testable.
- */
-
-import { allCandidates, candidatesFor } from './candidates';
 import { cloneCell, withCell } from './board';
+import { allCandidates, candidatesFor } from './candidates';
 import { getPeers, isValidPlacement } from './rules';
-import type { Board, Cell, CellIndex, Digit, Move } from './types';
+import type { Board, Cell, CellIndex, Digit, EngineResult } from './types';
 
-export interface EngineResult {
-    board: Board;
-    move: Move;
-}
+
 
 function snapshot(board: Board, indices: CellIndex[]) {
     return indices.map((index) => ({ index, cell: cloneCell(board[index]) }));
 }
 
-/**
- * Place (or clear) a definitive value. Placing the value already present clears
- * the cell. Placing a value clears that cell's notes. No-op on givens.
- *
- * When `removePeerNotes` is set, placing a value also strips that value from
- * the pencil notes of its peers (those candidates are no longer possible). The
- * whole thing is one reversible move so a single undo restores the peer notes.
- */
 export function placeValue(
     board: Board,
     index: CellIndex,
@@ -82,7 +63,6 @@ export function toggleNote(
     if (cell.given || cell.value !== null) return null;
 
     const has = cell.notes.has(value);
-    // Only block *adding* an illegal note; removing is always allowed.
     if (!has && validate && !isValidPlacement(board, index, value)) return null;
 
     const before = snapshot(board, [index]);
@@ -95,7 +75,6 @@ export function toggleNote(
     return { board: nextBoard, move: { type: 'note', before, after } };
 }
 
-/** Clear a cell's value and notes. No-op on givens or already-empty cells. */
 export function eraseCell(board: Board, index: CellIndex): EngineResult | null {
     const cell = board[index];
     if (cell.given) return null;
