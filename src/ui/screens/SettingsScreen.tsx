@@ -1,20 +1,35 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../theme/ThemeProvider';
-import { GameSettings } from '../components/Settings/GameSettings';
-import { ThemePicker } from '../components/ThemePicker/ThemePicker';
-import { Icon } from '../components/Icon';
+import React from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "../theme/ThemeProvider";
+import { GameSettings } from "../components/Settings/GameSettings";
+import { ThemePicker } from "../components/ThemePicker/ThemePicker";
+import { Icon } from "../components/Icon";
+import * as WebBrowser from "expo-web-browser";
+import InfoSection from "../components/Settings/InfoSection";
 
 export function SettingsScreen() {
   const router = useRouter();
   const c = useTheme().colors;
   const insets = useSafeAreaInsets();
 
+  const handleOpenLink = async (url:string) => {
+    try {
+      await WebBrowser.openBrowserAsync(url, {
+        // Optional: customize the browser UI colors to match your theme
+        toolbarColor: c.background,
+        controlsColor: c.text,
+      });
+    } catch (error) {
+      console.error("Failed to open link:", error);
+    }
+  };
+
   return (
     <ScrollView
       style={{ backgroundColor: c.background }}
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.container,
         { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 },
@@ -37,14 +52,17 @@ export function SettingsScreen() {
 
       <GameSettings />
       <ThemePicker />
+
+      <InfoSection handleOpenLink={handleOpenLink} c={c}/>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, gap: 24 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   back: { width: 32 },
   backSpacer: { width: 32 },
-  title: { flex: 1, fontSize: 18, fontWeight: '600', textAlign: 'center' },
+  title: { flex: 1, fontSize: 18, fontWeight: "600", textAlign: "center" },
+  
 });
