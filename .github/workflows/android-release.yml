@@ -44,14 +44,28 @@ jobs:
       - name: Decode Android keystore
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_B64" | base64 -d > android/app/release.jks
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 secret is empty or missing"
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > android/app/release.jks
+          ls -l android/app/release.jks
 
       - name: Validate keystore and alias
         env:
           STORE_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          keytool -list -keystore android/app/release.jks -storepass "$STORE_PW" -alias "$KEY_ALIAS" | grep -E "Alias name|Entry type|Valid"
+          if ! keytool -list -v \
+              -keystore android/app/release.jks \
+              -storepass "$STORE_PW" \
+              -alias "$KEY_ALIAS" > keytool.txt 2>&1; then
+            echo "::error::keytool failed (check keystore, store password, alias)"
+            cat keytool.txt
+            exit 1
+          fi
+          grep -E "Alias name|Entry type|Valid" keytool.txt
 
       - name: Build Android App Bundle (AAB)
         working-directory: android
