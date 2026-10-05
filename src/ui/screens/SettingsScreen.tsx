@@ -42,7 +42,10 @@ export function SettingsScreen() {
                     hitSlop={16}
                     accessibilityRole="button"
                     accessibilityLabel="Back"
-                    style={styles.back}
+                    style={({ pressed }) => [
+                        styles.back,
+                        { opacity: pressed ? 0.5 : 1.0 },
+                    ]}
                 >
                     <Icon name="chevronLeft" size={28} color={c.text} />
                 </Pressable>
@@ -56,15 +59,27 @@ export function SettingsScreen() {
             {/* Appearance Section */}
             <View style={styles.sectionContainer}>
                 <Text style={[styles.section, { color: c.textMuted }]}>Appearance</Text>
-                <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.gridLine }]}>
+                <View
+                    style={[
+                        styles.card,
+                        { backgroundColor: c.surface, borderColor: c.gridLine },
+                    ]}
+                >
                     <ThemePicker />
                 </View>
             </View>
 
             {/* Legal & Info Section */}
             <View style={styles.sectionContainer}>
-                <Text style={[styles.section, { color: c.textMuted }]}>Legal & Info</Text>
-                <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.gridLine }]}>
+                <Text style={[styles.section, { color: c.textMuted }]}>
+                    Legal & Info
+                </Text>
+                <View
+                    style={[
+                        styles.card,
+                        { backgroundColor: c.surface, borderColor: c.gridLine },
+                    ]}
+                >
                     <InfoSection handleOpenLink={handleOpenLink} c={c} />
                 </View>
             </View>
@@ -78,35 +93,35 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        paddingHorizontal: 20, 
-        gap: 24, 
+    container: {
+        paddingHorizontal: 20,
+        gap: 24,
         flexGrow: 1,
     },
-    header: { 
-        flexDirection: "row", 
-        alignItems: "center", 
-        marginBottom: 4 
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 4,
     },
     back: { width: 32 },
     backSpacer: { width: 32 },
-    title: { 
-        flex: 1, 
-        fontSize: 18, 
-        fontWeight: "600", 
-        textAlign: "center" 
+    title: {
+        flex: 1,
+        fontSize: 18,
+        fontWeight: "600",
+        textAlign: "center",
     },
-    sectionContainer: { 
-        gap: 8 
+    sectionContainer: {
+        gap: 8,
     },
-    section: { 
-        fontSize: 13, 
-        fontWeight: "600", 
-        textTransform: "uppercase" 
+    section: {
+        fontSize: 13,
+        fontWeight: "600",
+        textTransform: "uppercase",
     },
-    card: { 
-        borderRadius: 14, 
-        borderWidth: 1, 
+    card: {
+        borderRadius: 14,
+        borderWidth: 1,
         paddingHorizontal: 16,
     },
     versionContainer: {

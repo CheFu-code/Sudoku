@@ -65,13 +65,11 @@
           "organization": "chefu-technologies"
         }
       ],
-      "@sentry/react-native",
       "expo-image",
       "expo-web-browser"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "updates": {
       "enabled": true,
