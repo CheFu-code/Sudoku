@@ -1,29 +1,30 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DIFFICULTIES } from '../../domain/types';
-import type { Difficulty } from '../../domain/types';
-import { useGameStore } from '../../state/gameStore';
-import { useTheme } from '../theme/ThemeProvider';
-import { useReduceMotion } from '../hooks/useReduceMotion';
-import { SudokuMark } from '../components/Logo/SudokuMark';
-import { Icon } from '../components/Icon';
+import React from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DIFFICULTIES } from "../../domain/types";
+import type { Difficulty } from "../../domain/types";
+import { useGameStore } from "../../state/gameStore";
+import { useTheme } from "../theme/ThemeProvider";
+import { useReduceMotion } from "../hooks/useReduceMotion";
+import { SudokuMark } from "../components/Logo/SudokuMark";
+import { Icon } from "../components/Icon";
+import { Image } from 'expo-image';
 
 const LABELS: Record<Difficulty, string> = {
-  easy: 'Easy',
-  medium: 'Medium',
-  hard: 'Hard',
-  expert: 'Expert',
-  extreme: 'Extreme',
-  diabolical: 'Diabolical',
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+  expert: "Expert",
+  extreme: "Extreme",
+  diabolical: "Diabolical",
 };
 
 function formatTime(total: number): string {
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 export function HomeScreen() {
@@ -39,17 +40,18 @@ export function HomeScreen() {
 
   const start = (d: Difficulty) => {
     newGame(d);
-    router.push('/game');
+    router.push("/game");
   };
 
   const resume = () => {
-    if (resumeSavedGame()) router.push('/game');
+    if (resumeSavedGame()) router.push("/game");
   };
 
   // Quiet first-appearance only — a gentle fade-up, staggered down the column.
   // Nothing animates on tap (calm by default, feedback by exception).
   let step = 0;
-  const entering = () => (reduceMotion ? undefined : FadeInDown.duration(240).delay(step++ * 50));
+  const entering = () =>
+    reduceMotion ? undefined : FadeInDown.duration(240).delay(step++ * 50);
 
   return (
     <ScrollView
@@ -62,7 +64,7 @@ export function HomeScreen() {
     >
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.push('/settings')}
+          onPress={() => router.push("/settings")}
           hitSlop={12}
           style={styles.gear}
           accessibilityRole="button"
@@ -73,10 +75,18 @@ export function HomeScreen() {
       </View>
 
       <Animated.View entering={entering()} style={styles.logo}>
-        <SudokuMark size={88} />
+        <Image
+          source={require("../../../assets/svgs/sudoku-icon.svg")}
+          style={{ width: 88, height: 88 }}
+          contentFit="contain"
+          accessibilityLabel="Sudoku logo"
+        />
       </Animated.View>
 
-      <Animated.Text entering={entering()} style={[styles.title, { color: c.text }]}>
+      <Animated.Text
+        entering={entering()}
+        style={[styles.title, { color: c.text }]}
+      >
         Sudoku
       </Animated.Text>
 
@@ -96,7 +106,10 @@ export function HomeScreen() {
         </Animated.View>
       )}
 
-      <Animated.Text entering={entering()} style={[styles.section, { color: c.textMuted }]}>
+      <Animated.Text
+        entering={entering()}
+        style={[styles.section, { color: c.textMuted }]}
+      >
         New game
       </Animated.Text>
 
@@ -105,11 +118,16 @@ export function HomeScreen() {
           <Animated.View key={d} entering={entering()}>
             <Pressable
               onPress={() => start(d)}
-              style={[styles.diffButton, { backgroundColor: c.surface, borderColor: c.gridLine }]}
+              style={[
+                styles.diffButton,
+                { backgroundColor: c.surface, borderColor: c.gridLine },
+              ]}
               accessibilityRole="button"
               accessibilityLabel={`New ${LABELS[d]} game`}
             >
-              <Text style={[styles.diffText, { color: c.text }]}>{LABELS[d]}</Text>
+              <Text style={[styles.diffText, { color: c.text }]}>
+                {LABELS[d]}
+              </Text>
               <Icon name="chevronRight" size={22} color={c.textMuted} />
             </Pressable>
           </Animated.View>
@@ -121,42 +139,51 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, gap: 14 },
-  header: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
+  header: { flexDirection: "row", justifyContent: "flex-end", minHeight: 44 },
   gear: {
     width: 44,
     height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: -10,
   },
-  logo: { alignItems: 'center', marginTop: 24 },
+  logo: { alignItems: "center", marginTop: 24 },
   title: {
     fontSize: 40,
-    fontWeight: '800',
-    textAlign: 'center',
+    fontWeight: "800",
+    textAlign: "center",
     marginTop: 12,
     marginBottom: 24,
   },
   resume: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderRadius: 14,
     paddingVertical: 18,
     paddingHorizontal: 20,
   },
-  resumeLabel: { color: '#FFF', fontSize: 17, fontWeight: '700' },
-  resumeMeta: { color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: '600' },
-  section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginTop: 8 },
+  resumeLabel: { color: "#FFF", fontSize: 17, fontWeight: "700" },
+  resumeMeta: {
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  section: {
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginTop: 8,
+  },
   list: { gap: 10 },
   diffButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderRadius: 14,
     borderWidth: 1,
     paddingVertical: 18,
     paddingHorizontal: 20,
   },
-  diffText: { fontSize: 18, fontWeight: '600' },
+  diffText: { fontSize: 18, fontWeight: "600" },
 });
