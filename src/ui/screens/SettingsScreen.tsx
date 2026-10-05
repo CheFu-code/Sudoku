@@ -1,20 +1,19 @@
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../theme/ThemeProvider";
-import { GameSettings } from "../components/Settings/GameSettings";
-import { ThemePicker } from "../components/ThemePicker/ThemePicker";
-import { Icon } from "../components/Icon";
 import * as WebBrowser from "expo-web-browser";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Icon } from "../components/Icon";
+import { GameSettings } from "../components/Settings/GameSettings";
 import InfoSection from "../components/Settings/InfoSection";
+import { ThemePicker } from "../components/ThemePicker/ThemePicker";
+import { useTheme } from "../theme/ThemeProvider";
 
 export function SettingsScreen() {
   const router = useRouter();
   const c = useTheme().colors;
   const insets = useSafeAreaInsets();
 
-  const handleOpenLink = async (url:string) => {
+  const handleOpenLink = async (url: string) => {
     try {
       await WebBrowser.openBrowserAsync(url, {
         // Optional: customize the browser UI colors to match your theme
@@ -52,8 +51,9 @@ export function SettingsScreen() {
 
       <GameSettings />
       <ThemePicker />
+      <View style={[styles.divider, { backgroundColor: c.gridLine }]} />
 
-      <InfoSection handleOpenLink={handleOpenLink} c={c}/>
+      <InfoSection handleOpenLink={handleOpenLink} c={c} />
     </ScrollView>
   );
 }
@@ -64,5 +64,8 @@ const styles = StyleSheet.create({
   back: { width: 32 },
   backSpacer: { width: 32 },
   title: { flex: 1, fontSize: 18, fontWeight: "600", textAlign: "center" },
-  
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    width: "100%",
+  },
 });

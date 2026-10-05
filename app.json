@@ -17,6 +17,23 @@
     },
     "android": {
       "package": "co.za.chefu.sudoku",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "sudoku.chefu.co.za",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#ECF7FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
