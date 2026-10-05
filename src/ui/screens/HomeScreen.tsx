@@ -1,16 +1,14 @@
-import React from "react";
+import { Image } from 'expo-image';
+import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DIFFICULTIES } from "../../domain/types";
 import type { Difficulty } from "../../domain/types";
+import { DIFFICULTIES } from "../../domain/types";
 import { useGameStore } from "../../state/gameStore";
-import { useTheme } from "../theme/ThemeProvider";
-import { useReduceMotion } from "../hooks/useReduceMotion";
-import { SudokuMark } from "../components/Logo/SudokuMark";
 import { Icon } from "../components/Icon";
-import { Image } from 'expo-image';
+import { useReduceMotion } from "../hooks/useReduceMotion";
+import { useTheme } from "../theme/ThemeProvider";
 
 const LABELS: Record<Difficulty, string> = {
   easy: "Easy",

@@ -9,8 +9,7 @@ const MISTAKE_OPTIONS: { value: number; label: string }[] = [
   { value: 0, label: 'Off' },
 ];
 
-/** Exposes the previously-hidden game settings (mistake limit, note validation,
- *  Fast Mode default) on the home screen, next to the theme picker. */
+
 export function GameSettings() {
   const theme = useTheme();
   const c = theme.colors;
