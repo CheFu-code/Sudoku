@@ -1,23 +1,28 @@
-import { Image } from 'expo-image';
-import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { useCallback, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Difficulty } from "../../domain/types";
 import { DIFFICULTIES } from "../../domain/types";
+import { difficultyProgress } from "../../domain/progression";
+import { getRepositories } from "../../data";
 import { useGameStore } from "../../state/gameStore";
 import { Icon } from "../components/Icon";
 import { useReduceMotion } from "../hooks/useReduceMotion";
 import { useTheme } from "../theme/ThemeProvider";
 
-const LABELS: Record<Difficulty, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-  expert: "Expert",
-  extreme: "Extreme",
-  diabolical: "Diabolical",
+const LEVELS: Record<Difficulty, { label: string; description: string }> = {
+  easy: { label: "Easy", description: "Ease into your rhythm" },
+  medium: { label: "Medium", description: "Build your momentum" },
+  hard: { label: "Hard", description: "Look a little deeper" },
+  expert: { label: "Expert", description: "Think a step ahead" },
+  extreme: { label: "Extreme", description: "Push your limits" },
+  diabolical: { label: "Diabolical", description: "The ultimate challenge" },
 };
+
+const PREVIEW_DIGITS = [5, 3, null, null, 7, null, 6, null, 9];
 
 function formatTime(total: number): string {
   const m = Math.floor(total / 60);
@@ -27,161 +32,246 @@ function formatTime(total: number): string {
 
 export function HomeScreen() {
   const router = useRouter();
-  const c = useTheme().colors;
+  const { colors: c, dark } = useTheme();
   const reduceMotion = useReduceMotion();
+  const { width, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const newGame = useGameStore((s) => s.newGame);
   const resumeSavedGame = useGameStore((s) => s.resumeSavedGame);
   const savedGameInfo = useGameStore((s) => s.savedGameInfo);
-  const insets = useSafeAreaInsets();
-
+  const [stats, setStats] = useState(() => getRepositories().stats.getStats());
+  useFocusEffect(useCallback(() => {
+    setStats(getRepositories().stats.getStats());
+  }, []));
   const saved = savedGameInfo();
+  const singleColumn = width < 360 || fontScale > 1.3;
+  const showPreview = width >= 390 && fontScale <= 1.3;
+  const actionInk = dark ? c.background : "#FFFFFF";
 
-  const start = (d: Difficulty) => {
-    newGame(d);
-    router.push("/game");
+  const start = (difficulty: Difficulty) => {
+    if (newGame(difficulty)) router.push("/game");
   };
 
   const resume = () => {
     if (resumeSavedGame()) router.push("/game");
   };
 
-  // Quiet first-appearance only — a gentle fade-up, staggered down the column.
-  // Nothing animates on tap (calm by default, feedback by exception).
-  let step = 0;
-  const entering = () =>
-    reduceMotion ? undefined : FadeInDown.duration(240).delay(step++ * 50);
+  const entering = (delay: number) =>
+    reduceMotion ? undefined : FadeInDown.duration(320).delay(delay);
 
   return (
     <ScrollView
-      style={{ backgroundColor: c.background }}
+      style={[styles.screen, { backgroundColor: c.background }]}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.container,
-        { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 },
+        {
+          paddingTop: insets.top + 20,
+          paddingBottom: insets.bottom + 28,
+          paddingLeft: Math.max(insets.left, 24),
+          paddingRight: Math.max(insets.right, 24),
+        },
       ]}
     >
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.push("/settings")}
-          hitSlop={12}
-          style={styles.gear}
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-        >
-          <Icon name="settings" size={22} color={c.textMuted} />
-        </Pressable>
-      </View>
-
-      <Animated.View entering={entering()} style={styles.logo}>
-        <Image
-          source={require("../../../assets/svgs/sudoku-icon.svg")}
-          style={{ width: 88, height: 88 }}
-          contentFit="contain"
-          accessibilityLabel="Sudoku logo"
-        />
-      </Animated.View>
-
-      <Animated.Text
-        entering={entering()}
-        style={[styles.title, { color: c.text }]}
-      >
-        Sudoku
-      </Animated.Text>
-
-      {saved && (
-        <Animated.View entering={entering()}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.brand}>
+            <Image
+              source={require("../../../assets/svgs/sudoku-icon.svg")}
+              style={styles.logo}
+              contentFit="contain"
+              accessible={false}
+            />
+            <Text style={[styles.brandName, { color: c.text }]}>Sudoku</Text>
+          </View>
           <Pressable
-            onPress={resume}
-            style={[styles.resume, { backgroundColor: c.primary }]}
+            onPress={() => router.push("/settings")}
+            style={({ pressed }) => [
+              styles.settings,
+              { backgroundColor: pressed ? c.highlight : c.surface, borderColor: c.gridLine },
+            ]}
             accessibilityRole="button"
-            accessibilityLabel={`Continue ${LABELS[saved.difficulty]} game at ${formatTime(saved.elapsed)}`}
+            accessibilityLabel="Settings"
           >
-            <Text style={styles.resumeLabel}>Continue</Text>
-            <Text style={styles.resumeMeta}>
-              {LABELS[saved.difficulty]} · {formatTime(saved.elapsed)}
-            </Text>
+            <Icon name="settings" size={20} color={c.text} strokeWidth={1.8} />
           </Pressable>
+        </View>
+
+        <Animated.View entering={entering(0)} style={styles.hero}>
+          <View style={styles.heroCopy}>
+            <Text accessibilityRole="header" style={[styles.title, { color: c.text }]}>
+              Find your{"\n"}focus.
+            </Text>
+            <Text style={[styles.subtitle, { color: c.textMuted }]}>
+              A fresh puzzle. A clearer mind.
+            </Text>
+          </View>
+          {showPreview && (
+            <View
+              style={[styles.previewFrame, { backgroundColor: c.highlight }]}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              aria-hidden
+            >
+              <View style={[styles.previewGrid, { backgroundColor: c.gridLine, borderColor: c.gridLine }]}>
+                {PREVIEW_DIGITS.map((digit, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.previewCell,
+                      { backgroundColor: index === 4 ? c.primary : c.surface },
+                    ]}
+                  >
+                    <Text
+                      allowFontScaling={false}
+                      style={[styles.previewDigit, { color: index === 4 ? actionInk : c.text }]}
+                    >
+                      {digit ?? ""}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </Animated.View>
-      )}
 
-      <Animated.Text
-        entering={entering()}
-        style={[styles.section, { color: c.textMuted }]}
-      >
-        New game
-      </Animated.Text>
-
-      <View style={styles.list}>
-        {DIFFICULTIES.map((d) => (
-          <Animated.View key={d} entering={entering()}>
+        {saved && (
+          <Animated.View entering={entering(60)}>
             <Pressable
-              onPress={() => start(d)}
-              style={[
-                styles.diffButton,
-                { backgroundColor: c.surface, borderColor: c.gridLine },
+              onPress={resume}
+              style={({ pressed }) => [
+                styles.resume,
+                { backgroundColor: c.primary, opacity: pressed ? 0.85 : 1 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`New ${LABELS[d]} game`}
+              accessibilityLabel={`Continue ${LEVELS[saved.difficulty].label} game at ${formatTime(saved.elapsed)}`}
             >
-              <Text style={[styles.diffText, { color: c.text }]}>
-                {LABELS[d]}
-              </Text>
-              <Icon name="chevronRight" size={22} color={c.textMuted} />
+              <View style={styles.resumeCopy}>
+                <Text style={[styles.resumeEyebrow, { color: actionInk }]}>YOUR PUZZLE IS WAITING</Text>
+                <Text style={[styles.resumeLabel, { color: actionInk }]}>Pick up where you left off</Text>
+                <Text style={[styles.resumeMeta, { color: actionInk }]}>
+                  {LEVELS[saved.difficulty].label}  ·  {formatTime(saved.elapsed)}
+                </Text>
+              </View>
+              <View style={[styles.resumeIcon, { backgroundColor: dark ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.18)" }]}>
+                <Icon name="play" size={22} color={actionInk} />
+              </View>
             </Pressable>
           </Animated.View>
-        ))}
+        )}
+
+        <Animated.View entering={entering(120)} style={styles.gameSection}>
+          <View style={styles.sectionHeading}>
+            <Text accessibilityRole="header" style={[styles.sectionTitle, { color: c.text }]}>New game</Text>
+            <Text style={[styles.sectionSubtitle, { color: c.textMuted }]}>
+              Complete challenges to unlock new levels.
+            </Text>
+          </View>
+          <View style={styles.levelGrid}>
+            {DIFFICULTIES.map((difficulty, index) => {
+              const progress = difficultyProgress(difficulty, stats);
+              const requirement = progress.challengeLabel;
+              return (
+                <View key={difficulty} style={singleColumn ? styles.fullWidth : styles.halfWidth}>
+                  <Pressable
+                    onPress={() => start(difficulty)}
+                    disabled={!progress.unlocked}
+                    style={({ pressed }) => [
+                      styles.levelCard,
+                      { backgroundColor: progress.unlocked ? (pressed ? c.highlight : c.surface) : c.background, borderColor: pressed ? c.primary : c.gridLine },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={progress.unlocked
+                      ? `New ${LEVELS[difficulty].label} game`
+                      : `${LEVELS[difficulty].label} locked. ${requirement}. Challenge progress ${progress.completed} of ${progress.required}.`}
+                    accessibilityState={{ disabled: !progress.unlocked }}
+                    accessibilityHint={progress.unlocked ? LEVELS[difficulty].description : undefined}
+                  >
+                    <View style={styles.cardTop}>
+                      <View
+                        style={styles.levelMeter}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                        aria-hidden
+                      >
+                        {DIFFICULTIES.map((level, barIndex) => (
+                          <View
+                            key={level}
+                            style={[
+                              styles.meterBar,
+                              { height: 6 + barIndex * 2, backgroundColor: barIndex <= index ? (progress.unlocked ? c.primary : c.textMuted) : c.highlight },
+                            ]}
+                          />
+                        ))}
+                      </View>
+                      <Icon name={progress.unlocked ? "chevronRight" : "lock"} size={17} color={c.textMuted} />
+                    </View>
+                    <Text style={[styles.levelLabel, { color: progress.unlocked ? c.text : c.textMuted }]}>{LEVELS[difficulty].label}</Text>
+                    <Text style={[styles.levelDescription, { color: c.textMuted }]}>
+                      {progress.unlocked ? LEVELS[difficulty].description : requirement}
+                    </Text>
+                    {!progress.unlocked && (
+                      <View style={styles.unlockProgress}>
+                        <View style={[styles.progressTrack, { backgroundColor: c.highlight }]}>
+                          <View style={[styles.progressFill, { backgroundColor: c.primary, width: `${progress.completed / progress.required * 100}%` }]} />
+                        </View>
+                        <Text style={[styles.progressCount, { color: c.textMuted }]}>{progress.completed}/{progress.required}</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                </View>
+                );
+            })}
+          </View>
+        </Animated.View>
+
+        <Text style={[styles.footer, { color: c.textMuted }]}>One puzzle at a time. At your own pace.</Text>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 20, gap: 14 },
-  header: { flexDirection: "row", justifyContent: "flex-end", minHeight: 44 },
-  gear: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: -10,
-  },
-  logo: { alignItems: "center", marginTop: 24 },
-  title: {
-    fontSize: 40,
-    fontWeight: "800",
-    textAlign: "center",
-    marginTop: 12,
-    marginBottom: 24,
-  },
-  resume: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: 14,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-  },
-  resumeLabel: { color: "#FFF", fontSize: 17, fontWeight: "700" },
-  resumeMeta: {
-    color: "rgba(255,255,255,0.9)",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  section: {
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    marginTop: 8,
-  },
-  list: { gap: 10 },
-  diffButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-  },
-  diffText: { fontSize: 18, fontWeight: "600" },
+  screen: { flex: 1 },
+  container: { flexGrow: 1, alignItems: "center" },
+  content: { width: "100%", maxWidth: 680, gap: 28 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 16 },
+  brand: { flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1 },
+  logo: { width: 34, height: 34 },
+  brandName: { fontSize: 23, fontWeight: "700", letterSpacing: -0.7, flexShrink: 1 },
+  settings: { width: 46, height: 46, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  hero: { flexDirection: "row", alignItems: "center", gap: 18, paddingTop: 12, paddingBottom: 4 },
+  heroCopy: { flex: 1, gap: 12 },
+  eyebrow: { fontSize: 10, fontWeight: "700", letterSpacing: 2 },
+  title: { fontSize: 46, lineHeight: 50, fontWeight: "700", letterSpacing: -2 },
+  subtitle: { fontSize: 14, lineHeight: 22 },
+  previewFrame: { width: 120, height: 140, borderRadius: 28, alignItems: "center", justifyContent: "center", transform: [{ rotate: "8deg" }] },
+  previewGrid: { width: 104, height: 104, padding: 1, gap: 1, borderWidth: 1, borderRadius: 12, overflow: "hidden", flexDirection: "row", flexWrap: "wrap", transform: [{ rotate: "-16deg" }] },
+  previewCell: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  previewDigit: { fontSize: 18, fontWeight: "500" },
+  resume: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, padding: 16 },
+  resumeCopy: { flex: 1, gap: 6 },
+  resumeEyebrow: { fontSize: 9, fontWeight: "700", letterSpacing: 1.5 },
+  resumeLabel: { fontSize: 18, lineHeight: 24, fontWeight: "600", letterSpacing: -0.4 },
+  resumeMeta: { fontSize: 13, fontWeight: "500", fontVariant: ["tabular-nums"] },
+  resumeIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  gameSection: { gap: 18 },
+  sectionHeading: { gap: 5 },
+  sectionTitle: { fontSize: 23, fontWeight: "700", letterSpacing: -0.6 },
+  sectionSubtitle: { fontSize: 14, lineHeight: 21 },
+  levelGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  halfWidth: { width: "50%", flexBasis: "47%", flexGrow: 1 },
+  fullWidth: { width: "100%" },
+  levelCard: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 14, minHeight: 104 },
+  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  levelMeter: { flexDirection: "row", alignItems: "flex-end", gap: 3, height: 16 },
+  meterBar: { width: 4, borderRadius: 2 },
+  levelLabel: { fontSize: 16, fontWeight: "600", letterSpacing: -0.3, marginBottom: 3 },
+  levelDescription: { fontSize: 12, lineHeight: 16 },
+  unlockProgress: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
+  progressTrack: { flex: 1, height: 4, borderRadius: 2, overflow: "hidden" },
+  progressFill: { height: "100%", borderRadius: 2 },
+  progressCount: { fontSize: 11, fontVariant: ["tabular-nums"] },
+  footer: { fontSize: 12, lineHeight: 20, textAlign: "center", paddingTop: 2 },
 });

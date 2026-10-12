@@ -1,4 +1,5 @@
 import type { Difficulty } from '../../domain/types';
+import type { ProgressStats } from '../../domain/progression';
 import type { HintStage, TechniqueId } from '../../domain/hints';
 
 /**
@@ -23,9 +24,11 @@ export type GameEvent =
       puzzleId: string;
       elapsed: number;
       mistakes: number;
+      /** Missing in older events; unknown hint use cannot earn no-hint goals. */
+      hintsUsed?: number;
     };
 
-export interface AggregateStats {
+export interface AggregateStats extends ProgressStats {
   gamesCompleted: number;
   bestTimes: Partial<Record<Difficulty, number>>;
 }

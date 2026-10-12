@@ -6,6 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { canUndo as historyCanUndo } from '../../domain/history';
 import { useGameStore } from '../../state/gameStore';
+import { DIFFICULTIES } from '../../domain/types';
+import { difficultyProgress } from '../../domain/progression';
+import { getRepositories } from '../../data';
 import { useSettingsStore } from '../../state/settingsStore';
 import { computeMistakes, remainingCounts } from '../../state/selectors';
 // import { useGameSounds } from '../../hooks/useGameSounds';
@@ -136,6 +139,13 @@ export function GameScreen() {
 
   const paused = s.status === 'paused';
   const gameOver = s.status === 'won' || s.status === 'lost';
+  const nextDifficulty = DIFFICULTIES[DIFFICULTIES.indexOf(s.difficulty) + 1];
+  const nextProgress = s.status === 'won' && nextDifficulty
+    ? difficultyProgress(nextDifficulty, getRepositories().stats.getStats())
+    : null;
+  const nextLabel = nextDifficulty
+    ? nextDifficulty.charAt(0).toUpperCase() + nextDifficulty.slice(1)
+    : '';
   const remaining = remainingCounts(s.board);
   const activeValue =
     s.selectedDigit ?? (s.selectedIndex !== null ? s.board[s.selectedIndex].value : null);
@@ -202,6 +212,13 @@ export function GameScreen() {
             <Text style={[styles.resultText, { color: c.text }]}>
               {s.status === 'won' ? 'Solved! 🎉' : 'Out of mistakes'}
             </Text>
+            {nextProgress && (
+              <Text style={{ color: nextProgress.unlocked ? c.primary : c.textMuted, textAlign: 'center', fontSize: 14 }}>
+                {nextProgress.unlocked
+                  ? `${nextLabel} unlocked!`
+                  : `Next challenge: ${nextProgress.requirement}.`}
+              </Text>
+            )}
             <View style={styles.resultActions}>
               {s.status === 'lost' && (
                 <Pressable
@@ -215,7 +232,9 @@ export function GameScreen() {
               )}
               {s.status === 'won' && (
                 <Pressable
-                  onPress={() => s.newGame(s.difficulty)}
+                  onPress={() => {
+                    if (!s.newGame(s.difficulty)) router.replace('/');
+                  }}
                   style={[styles.btnPrimary, { backgroundColor: c.primary }]}
                   accessibilityRole="button"
                   accessibilityLabel="Start a new puzzle"

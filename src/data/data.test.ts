@@ -79,6 +79,36 @@ describe('MmkvGameStorageRepository', () => {
 });
 
 describe('LocalStatsRepository', () => {
+  it('records challenge achievements without combining separate wins into a perfect win', () => {
+    const kv = new MemoryKeyValueStore();
+    const repo = new LocalStatsRepository(kv);
+    const event = { type: 'game_completed' as const, difficulty: 'extreme' as const, puzzleId: 'x', elapsed: 1800, at: 1 };
+    repo.recordEvent({ ...event, mistakes: 0, hintsUsed: 1 });
+    repo.recordEvent({ ...event, mistakes: 1, hintsUsed: 0 });
+    expect(repo.getStats().achievementsByDifficulty?.extreme).toMatchObject({ flawless: true, noHints: true, perfect: false });
+    repo.recordEvent({ ...event, mistakes: 0, hintsUsed: 0 });
+    expect(new LocalStatsRepository(kv).getStats().achievementsByDifficulty?.extreme?.perfect).toBe(true);
+  });
+
+  it('checks the 20-minute boundary and does not assume missing hint data is hint-free', () => {
+    const repo = new LocalStatsRepository(new MemoryKeyValueStore());
+    const event = { type: 'game_completed' as const, difficulty: 'expert' as const, puzzleId: 'x', mistakes: 0, at: 1 };
+    repo.recordEvent({ ...event, elapsed: 1201 });
+    expect(repo.getStats().achievementsByDifficulty?.expert?.quick).toBe(false);
+    expect(repo.getStats().achievementsByDifficulty?.expert?.noHints).toBe(false);
+    repo.recordEvent({ ...event, elapsed: 1200, hintsUsed: 0 });
+    expect(repo.getStats().achievementsByDifficulty?.expert?.quick).toBe(true);
+  });
+
+  it('preserves and persists levels unlocked under the old progression', () => {
+    const kv = new MemoryKeyValueStore();
+    kv.set('stats:aggregate', JSON.stringify({ gamesCompleted: 6, bestTimes: {}, completedByDifficulty: { easy: 2, medium: 2, hard: 2 } }));
+    const repo = new LocalStatsRepository(kv);
+    expect(repo.getStats().unlockedDifficulties).toEqual(['easy', 'medium', 'hard', 'expert']);
+    repo.recordEvent({ type: 'game_completed', difficulty: 'easy', puzzleId: 'new', elapsed: 30, mistakes: 1, hintsUsed: 1, at: 1 });
+    expect(new LocalStatsRepository(kv).getStats().unlockedDifficulties).toContain('expert');
+  });
+
   it('aggregates completions and best times', () => {
     const repo = new LocalStatsRepository(new MemoryKeyValueStore());
     repo.recordEvent({
@@ -100,5 +130,35 @@ describe('LocalStatsRepository', () => {
     const stats = repo.getStats();
     expect(stats.gamesCompleted).toBe(2);
     expect(stats.bestTimes.easy).toBe(60);
+    expect(stats.completedByDifficulty.easy).toBe(2);
+  });
+
+  it('restores per-difficulty progress from storage and ignores unfinished games', () => {
+    const kv = new MemoryKeyValueStore();
+    const repo = new LocalStatsRepository(kv);
+    repo.recordEvent({ type: 'game_started', difficulty: 'easy', puzzleId: 'x', at: 1 });
+    repo.recordEvent({ type: 'mistake_made', difficulty: 'easy', at: 2 });
+    expect(repo.getStats().completedByDifficulty).toEqual({});
+    repo.recordEvent({ type: 'game_completed', difficulty: 'easy', puzzleId: 'x', elapsed: 10, mistakes: 0, at: 3 });
+    repo.recordEvent({ type: 'game_completed', difficulty: 'medium', puzzleId: 'y', elapsed: 20, mistakes: 0, at: 4 });
+    expect(new LocalStatsRepository(kv).getStats().completedByDifficulty).toEqual({ easy: 1, medium: 1 });
+  });
+
+  it('credits one provable win per legacy best time without inventing extra wins', () => {
+    const kv = new MemoryKeyValueStore();
+    kv.set('stats:aggregate', JSON.stringify({ gamesCompleted: 20, bestTimes: { easy: 60, medium: 0 } }));
+    const repo = new LocalStatsRepository(kv);
+    expect(repo.getStats().completedByDifficulty).toEqual({ easy: 1, medium: 1 });
+    repo.recordEvent({ type: 'game_completed', difficulty: 'easy', puzzleId: 'new', elapsed: 30, mistakes: 0, at: 1 });
+    expect(new LocalStatsRepository(kv).getStats().completedByDifficulty).toEqual({ easy: 2, medium: 1 });
+  });
+
+  it('falls back safely for corrupt stored statistics', () => {
+    const kv = new MemoryKeyValueStore();
+    const repo = new LocalStatsRepository(kv);
+    for (const raw of ['null', '{', '{"completedByDifficulty":{"easy":-1,"medium":"2"}}']) {
+      kv.set('stats:aggregate', raw);
+      expect(repo.getStats().completedByDifficulty).toEqual({});
+    }
   });
 });

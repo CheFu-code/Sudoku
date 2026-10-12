@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Eraser,
   Lightbulb,
+  LockKeyhole,
   Pause,
   Pencil,
   PencilSparkles,
@@ -21,6 +22,7 @@ import {
 export const icons = {
   // core vocabulary
   settings: Settings,
+  lock: LockKeyhole,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   // app-specific extras

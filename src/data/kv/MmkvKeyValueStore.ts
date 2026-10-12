@@ -1,24 +1,23 @@
 import type { KeyValueStore } from './KeyValueStore';
+import Storage from 'expo-sqlite/kv-store';
 
-/** In-memory key-value store used to keep the app working in Expo Go without a
- * native MMKV dependency.
- */
+/** Durable native storage backed by Expo SQLite, including in Expo Go. */
 export class MmkvKeyValueStore implements KeyValueStore {
-  private readonly values = new Map<string, string>();
+  private readonly prefix: string;
 
-  constructor(_id = 'sudoku') {
-    // no-op: intentionally kept simple for Expo Go compatibility
+  constructor(id = 'sudoku') {
+    this.prefix = `${id}:`;
   }
 
   getString(key: string): string | undefined {
-    return this.values.get(key);
+    return Storage.getItemSync(this.prefix + key) ?? undefined;
   }
 
   set(key: string, value: string): void {
-    this.values.set(key, value);
+    Storage.setItemSync(this.prefix + key, value);
   }
 
   delete(key: string): void {
-    this.values.delete(key);
+    Storage.removeItemSync(this.prefix + key);
   }
 }

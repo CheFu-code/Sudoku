@@ -20,14 +20,14 @@ import {
 import { getPeers, isValidPlacement } from '../domain/rules';
 import { buildHintPresentation, findHint } from '../domain/hints';
 import type { HintAction, HintPresentation } from '../domain/hints';
-import type { EngineResult } from '../domain/engine';
+import { difficultyProgress } from '../domain/progression';
 import {
   canUndo,
   createHistory,
   pushMove,
   undo as undoHistory,
 } from '../domain/history';
-import type { Board, CellIndex, Difficulty, Digit, Puzzle } from '../domain/types';
+import type { Board, CellIndex, Difficulty, Digit, EngineResult, Puzzle } from '../domain/types';
 import type { History } from '../domain/history';
 import { getRepositories } from '../data';
 import { useSettingsStore } from './settingsStore';
@@ -65,7 +65,8 @@ interface GameState {
   flashCells: { indices: CellIndex[]; nonce: number } | null;
 
   // lifecycle
-  newGame: (difficulty: Difficulty) => void;
+  /** Returns false when the requested difficulty has not been unlocked. */
+  newGame: (difficulty: Difficulty) => boolean;
   /** Replay the current puzzle from its givens (used after a loss). */
   restartGame: () => void;
   resumeSavedGame: () => boolean;
@@ -137,6 +138,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   newGame: (difficulty) => {
     const repos = getRepositories();
+    if (!difficultyProgress(difficulty, repos.stats.getStats()).unlocked) {
+      return false;
+    }
     const played = repos.games.getPlayedIds();
     const puzzle = repos.puzzles.getPuzzle(difficulty, played);
     repos.games.markPlayed(puzzle.id);
@@ -159,6 +163,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
     emit({ type: 'game_started', difficulty, puzzleId: puzzle.id, at: Date.now() });
     persist(get);
+    return true;
   },
 
   restartGame: () => {
@@ -245,6 +250,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   erase: () => {
+    if (get().status !== 'playing') return;
     const { board, selectedIndex, history } = get();
     if (selectedIndex === null) return;
     const res = eraseCell(board, selectedIndex);
@@ -255,6 +261,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   undo: () => {
+    if (get().status !== 'playing') return;
     const { board, history } = get();
     if (!canUndo(history)) return;
     const res = undoHistory(board, history);
@@ -264,6 +271,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   fastPencil: () => {
+    if (get().status !== 'playing') return;
     const { board, history } = get();
     const res = applyAutoNotes(board);
     if (!res) return;
@@ -278,6 +286,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((s) => ({ fastMode: !s.fastMode, selectedDigit: null })),
 
   requestHint: () => {
+    if (get().status !== 'playing') return;
     const raw = findHint(get().board, get().puzzle?.solution || null);
     if (!raw) return; // button is disabled when no hint exists; guard anyway
     const hint = buildHintPresentation(raw);
@@ -309,6 +318,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   applyHint: () => {
+    if (get().status !== 'playing') return;
     const { hint, board, hintMaxStep } = get();
     if (!hint) return;
     const res: EngineResult | null = applyHintAction(board, hint.action);
@@ -361,6 +371,7 @@ function commitMove(
   get: () => GameState,
   res: EngineResult,
 ) {
+  if (get().status !== 'playing') return;
   const { history, puzzle } = get();
   let status: GameStatus = get().status;
 
@@ -372,6 +383,7 @@ function commitMove(
       puzzleId: puzzle.id,
       elapsed: get().elapsed,
       mistakes: get().mistakes,
+      hintsUsed: get().hintsUsed,
       at: Date.now(),
     });
     getRepositories().games.clearGame();
@@ -389,6 +401,7 @@ function applyDigit(
   index: CellIndex,
   digit: Digit,
 ) {
+  if (get().status !== 'playing') return;
   const { board, history, pencilMode, puzzle, mistakes } = get();
   if (!puzzle) return;
   const validate = useSettingsStore.getState().validateNotes;
@@ -443,6 +456,7 @@ function applyDigit(
       puzzleId: puzzle.id,
       elapsed: get().elapsed,
       mistakes: nextMistakes,
+      hintsUsed: get().hintsUsed,
       at: Date.now(),
     });
     getRepositories().games.clearGame();
