@@ -17,6 +17,7 @@
     },
     "android": {
       "package": "co.za.chefu.sudoku",
+      "versionCode": 3,
       "intentFilters": [
         {
           "action": "VIEW",
