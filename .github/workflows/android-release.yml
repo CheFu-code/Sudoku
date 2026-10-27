@@ -67,6 +67,18 @@ jobs:
           fi
           grep -E "Alias name|Entry type|Valid" keytool.txt
 
+      # Sentry source maps are optional for producing a signed release artifact.
+      # If upload credentials/project access are invalid, do not fail Gradle.
+      - name: Configure Sentry source map upload
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "Sentry token absent; skipping source map upload"
+          else
+            echo "Sentry upload will be attempted; upload failures are non-fatal"
+          fi
+
       - name: Build Android App Bundle (AAB)
         working-directory: android
         env:
@@ -75,6 +87,8 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ALLOW_FAILURE: "true"
+          NODE_ENV: production
         run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Verify AAB is not debug-signed
