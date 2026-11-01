@@ -49,4 +49,8 @@ export class MmkvGameStorageRepository implements GameStorageRepository {
       this.kv.set(PLAYED_KEY, JSON.stringify(ids));
     }
   }
+
+  clearPlayed(): void {
+    this.kv.delete(PLAYED_KEY);
+  }
 }

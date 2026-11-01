@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eraser,
+  ExternalLink,
   Lightbulb,
   LockKeyhole,
   Pause,
@@ -34,6 +35,7 @@ export const icons = {
   lightbulb: Lightbulb,
   play: Play,
   pause: Pause,
+  externalLink: ExternalLink,
 } as const;
 
 export type IconName = keyof typeof icons;

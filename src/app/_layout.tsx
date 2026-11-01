@@ -5,8 +5,21 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "@/ui/theme/ThemeProvider";
 import * as Sentry from "@sentry/react-native";
+import { MmkvKeyValueStore } from "@/data/kv/MmkvKeyValueStore";
 
-Sentry.init({
+const settingsStore = new MmkvKeyValueStore("sudoku-settings");
+let persistedSettings: { diagnosticsEnabled?: boolean; replayEnabled?: boolean } = {};
+const rawSettings = settingsStore.getString("settings");
+if (rawSettings) {
+    try {
+        persistedSettings = JSON.parse(rawSettings)?.state ?? {};
+    } catch {
+        persistedSettings = {};
+    }
+}
+
+if (persistedSettings.diagnosticsEnabled !== false) {
+    Sentry.init({
     dsn: "https://bf56f5fbc4dd81c86c34dd47c7519295@o4512011915296768.ingest.de.sentry.io/4512097158299728",
 
     // Adds more context data to events (IP address, cookies, user, etc.)
@@ -19,14 +32,17 @@ Sentry.init({
     // Configure Session Replay
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1,
-    integrations: [
-        Sentry.mobileReplayIntegration(),
-        Sentry.feedbackIntegration(),
-    ],
+        integrations: [
+            ...(persistedSettings.replayEnabled === false
+                ? []
+                : [Sentry.mobileReplayIntegration()]),
+            Sentry.feedbackIntegration(),
+        ],
 
     // uncomment the line below to enable Spotlight (https://spotlightjs.com)
     // spotlight: __DEV__,
-});
+    });
+}
 
 SplashScreen.preventAutoHideAsync();
 

@@ -3,15 +3,12 @@
  * cleanly in Expo Go. This uses a simple in-memory fallback for settings.
  */
 import type { StateStorage } from 'zustand/middleware';
+import { MmkvKeyValueStore } from '../data/kv/MmkvKeyValueStore';
 
-const storage = new Map<string, string>();
+const storage = new MmkvKeyValueStore('sudoku-settings');
 
 export const mmkvStateStorage: StateStorage = {
-  getItem: (name) => storage.get(name) ?? null,
-  setItem: (name, value) => {
-    storage.set(name, value);
-  },
-  removeItem: (name) => {
-    storage.delete(name);
-  },
+  getItem: (name) => storage.getString(name) ?? null,
+  setItem: (name, value) => storage.set(name, value),
+  removeItem: (name) => storage.delete(name),
 };

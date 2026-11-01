@@ -32,4 +32,5 @@ export interface GameStorageRepository {
 
   getPlayedIds(): string[];
   markPlayed(id: string): void;
+  clearPlayed(): void;
 }

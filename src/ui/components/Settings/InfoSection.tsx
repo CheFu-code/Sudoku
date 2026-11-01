@@ -1,5 +1,5 @@
-import { Feather } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Icon } from "../Icon";
 
 const InfoSection = ({
     handleOpenLink,
@@ -25,13 +25,7 @@ const InfoSection = ({
 }) => {
     return (
         <View style={styles.linksSection}>
-            <Pressable
-                style={styles.linkRow}
-                onPress={() => handleOpenLink("https://sudoku.chefu.co.za/about")}
-            >
-                <Text style={[styles.linkText, { color: c.text }]}>About</Text>
-                <Feather name="external-link" size={20} color={c.textMuted} />
-            </Pressable>
+            
 
             <View
                 style={[styles.separator, { backgroundColor: c.gridLine || "#ccc" }]}
@@ -39,10 +33,10 @@ const InfoSection = ({
 
             <Pressable
                 style={styles.linkRow}
-                onPress={() => handleOpenLink("https://sudoku.chefu.co.za/privacy")}
+                onPress={() => handleOpenLink("https://www.chefu.co.za/privacy/sudoku")}
             >
                 <Text style={[styles.linkText, { color: c.text }]}>Privacy Policy</Text>
-                <Feather name="external-link" size={20} color={c.textMuted} />
+                <Icon name="externalLink" size={20} color={c.textMuted} />
                 
             </Pressable>
 
@@ -52,12 +46,12 @@ const InfoSection = ({
 
             <Pressable
                 style={styles.linkRow}
-                onPress={() => handleOpenLink("https://sudoku.chefu.co.za/terms")}
+                onPress={() => handleOpenLink("https://www.chefu.co.za/terms/sudoku")}
             >
                 <Text style={[styles.linkText, { color: c.text }]}>
                     Terms of Service
                 </Text>
-                <Feather name="external-link" size={20} color={c.textMuted} />
+                <Icon name="externalLink" size={20} color={c.textMuted} />
 
             </Pressable>
         </View>

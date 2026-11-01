@@ -1,7 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSettingsStore } from '../../../state/settingsStore';
 import { useTheme } from '../../theme/ThemeProvider';
+import { getRepositories } from '../../../data';
 
 const MISTAKE_OPTIONS: { value: number; label: string }[] = [
   { value: 3, label: '3' },
@@ -19,6 +20,10 @@ export function GameSettings() {
   const setFastModeDefault = useSettingsStore((s) => s.setFastModeDefault);
   const setValidateNotes = useSettingsStore((s) => s.setValidateNotes);
   const setMaxMistakes = useSettingsStore((s) => s.setMaxMistakes);
+  const diagnosticsEnabled = useSettingsStore((s) => s.diagnosticsEnabled);
+  const replayEnabled = useSettingsStore((s) => s.replayEnabled);
+  const setDiagnosticsEnabled = useSettingsStore((s) => s.setDiagnosticsEnabled);
+  const setReplayEnabled = useSettingsStore((s) => s.setReplayEnabled);
 
   const trackColor = { true: c.primary, false: c.gridLine };
 
@@ -82,7 +87,62 @@ export function GameSettings() {
             accessibilityLabel="Start new games in Fast mode"
           />
         </View>
+
+        <View style={[styles.divider, { backgroundColor: c.gridLine }]} />
+
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: c.text }]}>Crash diagnostics</Text>
+          <Switch
+            value={diagnosticsEnabled}
+            onValueChange={setDiagnosticsEnabled}
+            trackColor={trackColor}
+            thumbColor="#FFFFFF"
+            ios_backgroundColor={c.gridLine}
+            accessibilityLabel="Crash diagnostics"
+          />
+        </View>
+
+        <View style={[styles.divider, { backgroundColor: c.gridLine }]} />
+
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: c.text }]}>Session replay</Text>
+          <Switch
+            value={replayEnabled}
+            onValueChange={setReplayEnabled}
+            trackColor={trackColor}
+            thumbColor="#FFFFFF"
+            ios_backgroundColor={c.gridLine}
+            accessibilityLabel="Session replay"
+          />
+        </View>
       </View>
+
+      <Pressable
+        onPress={() =>
+          Alert.alert(
+            'Reset local progress?',
+            'This removes your unfinished game, completed-puzzle history, and personal statistics.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Reset',
+                style: 'destructive',
+                onPress: () => {
+                  const repositories = getRepositories();
+                  repositories.games.clearGame();
+                  repositories.games.clearPlayed();
+                  repositories.stats.clear();
+                },
+              },
+            ],
+          )
+        }
+        style={[styles.resetButton, { borderColor: c.gridLine }]}
+        accessibilityRole="button"
+        accessibilityLabel="Reset local progress"
+      >
+        <Text style={[styles.resetText, { color: c.error }]}>Reset local progress</Text>
+      </Pressable>
     </View>
   );
 }
@@ -110,4 +170,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   segmentText: { fontSize: 15, fontWeight: '600' },
+  resetButton: {
+    minHeight: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetText: { fontSize: 15, fontWeight: '600' },
 });

@@ -16,6 +16,10 @@ const STATS_KEY = 'stats:aggregate';
 export class LocalStatsRepository implements StatsRepository {
   constructor(private readonly kv: KeyValueStore) {}
 
+  clear(): void {
+    this.kv.delete(STATS_KEY);
+  }
+
   recordEvent(event: GameEvent & { at: number }): void {
     if (event.type !== 'game_completed') return;
     const stats = this.getStats();

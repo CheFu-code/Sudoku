@@ -12,8 +12,10 @@ full architecture guide.
 - **Fast Mode** (number-first): pick a digit, then tap cells to place it repeatedly.
 - **Fast Pencil**: auto-fill every empty cell's legal candidates in one undoable step.
 - **Timer** with pause, **mistakes** counter, **undo**, **erase**.
-- **5 difficulties** (easy → extreme) served from a bundled, offline puzzle bank.
+- **6 difficulties** (easy → diabolical) served from a bundled, offline puzzle bank.
 - **Theme palette** — multiple selectable color themes.
+- **Teaching hints** — step-by-step explanations of Sudoku techniques.
+- **Personal progress** — completed puzzles and best times stay on-device.
 
 ## Stack
 

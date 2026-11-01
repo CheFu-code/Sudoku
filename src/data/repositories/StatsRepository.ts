@@ -36,4 +36,5 @@ export interface AggregateStats extends ProgressStats {
 export interface StatsRepository {
   recordEvent(event: GameEvent & { at: number }): void;
   getStats(): AggregateStats;
+  clear(): void;
 }

@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
 import { canUndo as historyCanUndo } from '../../domain/history';
 import { useGameStore } from '../../state/gameStore';
 import { DIFFICULTIES } from '../../domain/types';
@@ -21,6 +20,13 @@ import { GameHeader } from '../components/Header/GameHeader';
 import { GameStats } from '../components/Header/GameStats';
 import { HintSheet } from '../components/Hint/HintSheet';
 import { NumberPad } from '../components/NumberPad/NumberPad';
+import { Icon } from '../components/Icon';
+
+function formatGameTime(total: number): string {
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
 
 function ConfettiBurst({ visible }: { visible: boolean }) {
   const burst = useSharedValue(0);
@@ -106,26 +112,6 @@ export function GameScreen() {
     [s.board, s.status],
   );
 
-  // Vibrate when the mistake count climbs (a wrong value was just placed).
-  const prevMistakes = useRef(s.mistakes);
-  // useEffect(() => {
-  //   if (s.mistakes > prevMistakes.current) {
-  //     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-  //     void play('error');
-  //   }
-  //   prevMistakes.current = s.mistakes;
-  // }, [play, s.mistakes]);
-
-  // The one earned celebration: a success tap when the puzzle is solved.
-  // const prevStatus = useRef(s.status);
-  // useEffect(() => {
-  //   if (s.status === 'won' && prevStatus.current !== 'won') {
-  //     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-  //     void play('success');
-  //   }
-  //   prevStatus.current = s.status;
-  // }, [play, s.status]);
-
   if (!s.puzzle) {
     // No active game (e.g. deep link) — bounce home.
     return (
@@ -175,17 +161,7 @@ export function GameScreen() {
           paused={paused}
           onTogglePause={() => s.setPaused(!paused)}
         />
-        {paused ? (
-          <Pressable
-            onPress={() => s.setPaused(false)}
-            style={[styles.pausedBox, { backgroundColor: c.surface, borderColor: c.gridLine }]}
-            accessibilityRole="button"
-            accessibilityLabel="Paused. Tap to resume."
-          >
-            <Text style={{ color: c.textMuted, fontSize: 18 }}>Paused — tap to resume</Text>
-          </Pressable>
-        ) : (
-          // The completed board stays fully visible — the result sits below it.
+        <View style={styles.boardStage}>
           <Board
             board={s.board}
             selectedIndex={s.selectedIndex}
@@ -198,7 +174,21 @@ export function GameScreen() {
             chainLinks={s.hint ? s.hint.frames[s.hintStep].links : undefined}
             onCellPress={s.selectCell}
           />
-        )}
+          {paused && (
+            <Pressable
+              onPress={() => s.setPaused(false)}
+              style={[styles.pauseOverlay, { backgroundColor: c.background + 'E6' }]}
+              accessibilityRole="button"
+              accessibilityLabel="Paused. Tap to resume."
+            >
+              <Icon name="play" size={28} color={c.primary} />
+              <Text style={{ color: c.text, fontSize: 18, fontWeight: '600' }}>
+                Paused
+              </Text>
+              <Text style={{ color: c.textMuted, fontSize: 14 }}>Tap to resume</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       <View style={styles.bottom}>
@@ -212,6 +202,14 @@ export function GameScreen() {
             <Text style={[styles.resultText, { color: c.text }]}>
               {s.status === 'won' ? 'Solved! 🎉' : 'Out of mistakes'}
             </Text>
+            <Text style={[styles.resultMeta, { color: c.textMuted }]}>
+              {s.difficulty.charAt(0).toUpperCase() + s.difficulty.slice(1)} · {formatGameTime(s.elapsed)} · {s.mistakes} mistake{s.mistakes === 1 ? '' : 's'} · {s.hintsUsed} hint{s.hintsUsed === 1 ? '' : 's'}
+            </Text>
+            {s.status === 'won' && (
+              <Text style={[styles.resultMeta, { color: c.primary }]}>
+                Personal best: {getRepositories().stats.getStats().bestTimes[s.difficulty] === s.elapsed ? 'yes' : 'no'}
+              </Text>
+            )}
             {nextProgress && (
               <Text style={{ color: nextProgress.unlocked ? c.primary : c.textMuted, textAlign: 'center', fontSize: 14 }}>
                 {nextProgress.unlocked
@@ -307,13 +305,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
   boardWrap: { paddingHorizontal: 4, marginTop: 12 },
-  pausedBox: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 12,
-    borderWidth: 1,
+  boardStage: {
+    position: 'relative',
+  },
+  pauseOverlay: {
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   bottom: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 10 },
   result: {
@@ -341,6 +340,7 @@ const styles = StyleSheet.create({
     transformOrigin: 'center',
   },
   resultText: { fontSize: 28, fontWeight: '800' },
+  resultMeta: { fontSize: 14, textAlign: 'center' },
   resultActions: { flexDirection: 'row', gap: 12 },
   btnPrimary: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 28 },
   btnPrimaryText: { color: '#FFF', fontSize: 16, fontWeight: '700' },

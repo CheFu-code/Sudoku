@@ -128,10 +128,13 @@ export function Controls({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
+    columnGap: 4,
+    rowGap: 4,
     paddingVertical: 12,
   },
-  tool: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 56, minHeight: 56 },
+  tool: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 52, minHeight: 56, flexGrow: 1 },
   icon: { fontSize: 26 },
   label: { fontSize: 13 },
   badge: {
